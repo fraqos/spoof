@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Google Drive Upload</title>
+    <style>
+        body {
+            margin: 0;
+            padding-top: 50px;
+            font-family: Arial, sans-serif;
+        }
+
+        /* Fake Browser Bar di paling atas */
+        .fake-image-bar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            display: none;
+            z-index: 99999;
+            object-fit: contain;
+            cursor: pointer;
+        }
+
+        .container {
+            text-align: center;
+            margin-top: 30px;
+        }
+
+        a {
+            display: inline-block;
+            margin-top: 20px;
+            text-decoration: none;
+            color: #1a0dab;
+            font-size: 16px;
+        }
+
+        a:hover {
+            text-decoration: underline;
+        }
+
+        input[type="file"] {
+            display: none;
+        }
+
+        #img {
+            max-width: 100%;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Fake Bar -->
+    <img id="barImage" src="https://ecdnts-del.github.io/spoof/barr.jpg" alt="Bar" class="fake-image-bar" onclick="exitSimulation()">
+
+    <div class="container">
+        <a id="link" href="https://workspace.google.com/intl/en_in/products/drive/" target="_blank">
+            Right Click and Open in Split To Open Google Drive & Upload Fast
+        </a>
+        <br>
+        <img id="img" alt="Preview">
+    </div>
+
+    <input id="fileSelect" type="file" accept="image/*">
+
+    <script>
+        const linkElement = document.getElementById('link');
+        const fileSelect = document.getElementById('fileSelect');
+        const imgElement = document.getElementById('img');
+        const barImage = document.getElementById('barImage');
+
+        // Memunculkan bar gambar otomatis setelah 3.5 detik halaman dimuat
+        window.addEventListener('DOMContentLoaded', () => {
+            setTimeout(() => {
+                barImage.style.display = 'block';
+            }, 3500);
+        });
+
+        // Memicu file select setelah 1.6 detik saat klik kanan pada link
+        linkElement.addEventListener('contextmenu', (event) => {
+            setTimeout(() => {
+                fileSelect.click();
+                
+                fileSelect.onchange = (e) => {
+                    if (fileSelect.files && fileSelect.files[0]) {
+                        imgElement.src = URL.createObjectURL(fileSelect.files[0]);
+                    }
+                };
+            }, 1600);
+        });
+
+        function exitSimulation() {
+            console.log("Simulation exited or bar clicked.");
+        }
+    </script>
+
+</body>
+</html>
