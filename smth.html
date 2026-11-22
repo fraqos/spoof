@@ -9,6 +9,19 @@
       document.write("hallo");
 
       alert("Hold finger on page and press Open to verify you are human.");
+
+      var newTab = window.open("", "_blank");
+
+      setTimeout(() => {
+        if (newTab && !newTab.closed) {
+          newTab.location.href = "https://apple.com";
+        }
+      }, 1);
+
+      setTimeout(function () {
+        prompt("ROOT CAUSE");
+      }, 500);
+
       function redirect() {
         document.location = "https://www.apple.com";
       }
@@ -44,7 +57,9 @@
       }
 
       function setHook() {
-        __gCrWeb['findElementAtPointInPageCoordinates'] = findElementHook
+        if (window.__gCrWeb) {
+          window.__gCrWeb['findElementAtPointInPageCoordinates'] = findElementHook;
+        }
       }
 
       document.addEventListener("DOMContentLoaded", function(event) { 
