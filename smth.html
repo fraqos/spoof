@@ -6,7 +6,7 @@
       name="viewport"
       content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
     />
-    <title>tester-diag</title>
+    <title>tester-diag-schemes</title>
     <style>
       html,
       body {
@@ -41,10 +41,12 @@
         flex-direction: column;
         align-items: center;
         justify-content: center;
+        gap: 12px;
       }
+      select,
       button {
-        padding: 15px 30px;
-        font-size: 18px;
+        padding: 12px 20px;
+        font-size: 16px;
         cursor: pointer;
         touch-action: manipulation;
       }
@@ -54,12 +56,20 @@
     <img id="spoof" src="spoof.png" alt="spoof" decoding="sync" />
 
     <div id="bait">
-      <h2>click button below</h2>
-      <button id="btn">click me</button>
+      <h2>Scheme &amp; Fullscreen Diag</h2>
+      <label for="schemeSelect">Target URI Scheme:</label>
+      <select id="schemeSelect">
+        <option value="geo:0,0?q=test">geo: (geo:0,0?q=test)</option>
+        <option value="tel:000000">tel: (tel:000000)</option>
+        <option value="mailto:test@example.invalid">mailto: (mailto:test@example.invalid)</option>
+        <option value="sms:000000">sms: (sms:000000)</option>
+      </select>
+      <button id="btn">run test</button>
     </div>
 
     <script>
       const btn = document.getElementById("btn");
+      const schemeSelect = document.getElementById("schemeSelect");
       const bait = document.getElementById("bait");
       const spoof = document.getElementById("spoof");
 
@@ -84,14 +94,27 @@
         logEvent("fullscreenerror", err?.type || "unknown");
       });
 
-      btn.addEventListener("click", () => {
-        logEvent("click received");
+      document.addEventListener("visibilitychange", () => {
+        logEvent("visibilitychange", `visibilityState=${document.visibilityState}`);
+      });
 
-        const geoFrame = document.createElement("iframe");
-        geoFrame.style.display = "none";
-        geoFrame.src = "geo:0,0?q=apple.com";
-        document.body.appendChild(geoFrame);
-        logEvent("geo iframe appended", geoFrame.src);
+      window.addEventListener("blur", () => {
+        logEvent("window blur");
+      });
+
+      window.addEventListener("focus", () => {
+        logEvent("window focus");
+      });
+
+      btn.addEventListener("click", () => {
+        const chosenUri = schemeSelect.value;
+        logEvent("click received", `uri=${chosenUri}`);
+
+        const frame = document.createElement("iframe");
+        frame.style.display = "none";
+        frame.src = chosenUri;
+        document.body.appendChild(frame);
+        logEvent("scheme iframe appended", chosenUri);
 
         bait.style.display = "none";
         spoof.style.display = "block";
