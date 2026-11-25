@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Advanced Multi-Vector Security PoC</title>
+    <title>Advanced Multi-Vector Security PoC with Google Integration</title>
     <style>
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
@@ -59,6 +59,7 @@
         .btn-yellow { background-color: #fbbc05; color: #202124; }
         .btn-purple { background-color: #9334e6; }
         .btn-dark { background-color: #202124; }
+        .btn-google { background-color: #ffffff; color: #3c4043; border: 1px solid #dadce0; }
 
         .preview-container {
             margin-top: 20px;
@@ -76,6 +77,21 @@
             color: #5f6368;
             word-break: break-all;
         }
+        .embedded-frame-container {
+            margin-top: 20px;
+            width: 100%;
+            max-width: 400px;
+            height: 200px;
+            display: none;
+            border: 1px solid #dadce0;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        .embedded-frame-container iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
         .footer-note {
             margin-top: 25px;
             font-size: 11px;
@@ -85,35 +101,36 @@
 </head>
 <body>
 
-    <div class="banner">Google Security Portal - Extended Lab</div>
+    <div class="banner">Google Security Portal - Embedded Vector Lab</div>
     <h1>Advanced Vector Testing Suite</h1>
 
     <div class="button-container">
         <!-- 1. File Picker Spoof Vector -->
         <a href="https://google.com" class="spoof-link btn-blue" id="targetLink">1. File Picker & Ephemeral Tab</a>
 
-        <!-- 2. Geo & Custom Protocol Schemes -->
-        <button class="spoof-btn btn-green" onclick="triggerGeoHalo()">2. Geo Intent (geo:halo)</button>
-        <button class="spoof-btn btn-red" onclick="triggerCustomProtocol('tel:+628123456789')">3. Tel Intent (Phone Dialer)</button>
+        <!-- 2. Google Integration Buttons -->
+        <button class="spoof-btn btn-google" onclick="openGooglePopup()">2. Open Google.com in New Window/Popup</button>
+        <button class="spoof-btn btn-google" onclick="toggleGoogleIframe()">3. Toggle Google.com IFrame Embedding</button>
+        <button class="spoof-btn btn-google" onclick="redirectNavToGoogle()">4. Seamless Location Navigation to Google</button>
 
-        <!-- 3. Social Apps App Schemes -->
-        <button class="spoof-btn btn-purple" onclick="triggerAppScheme('instagram://app')">4. Instagram App Intent</button>
-        <button class="spoof-btn btn-dark" onclick="triggerAppScheme('whatsapp://send?text=PoC_Test')">5. WhatsApp Intent</button>
+        <!-- 3. Geo & Custom Protocol Schemes -->
+        <button class="spoof-btn btn-green" onclick="triggerGeoHalo()">5. Geo Intent (geo:halo)</button>
+        <button class="spoof-btn btn-red" onclick="triggerCustomProtocol('tel:+628123456789')">6. Tel Intent (Phone Dialer)</button>
 
-        <!-- 4. Android System Settings Intents -->
-        <button class="spoof-btn btn-yellow" onclick="triggerAndroidIntent('android.settings.BLUETOOTH_SETTINGS')">6. Bluetooth Settings Intent</button>
-        <button class="spoof-btn btn-yellow" onclick="triggerAndroidIntent('android.settings.WIFI_SETTINGS')">7. WiFi Settings Intent</button>
-        <button class="spoof-btn btn-yellow" onclick="triggerAndroidIntent('android.settings.LOCATION_SOURCE_SETTINGS')">8. Location Settings Intent</button>
-
-        <!-- 5. Browser Sensor / Hardware APIs -->
-        <button class="spoof-btn btn-blue" onclick="triggerVibration()">9. Vibration API Test</button>
-        <button class="spoof-btn btn-green" onclick="triggerClipboardRead()">10. Clipboard Read Test</button>
+        <!-- 4. Social & App Intents -->
+        <button class="spoof-btn btn-purple" onclick="triggerAppScheme('instagram://app')">7. Instagram App Intent</button>
+        <button class="spoof-btn btn-dark" onclick="triggerAndroidIntent('android.settings.BLUETOOTH_SETTINGS')">8. Bluetooth Settings Intent</button>
     </div>
 
     <!-- Uploaded Image Preview Box -->
     <div class="preview-container" id="previewBox">
         <img id="imagePreview" src="" alt="File Preview">
         <div class="file-info" id="fileInfo"></div>
+    </div>
+
+    <!-- Google Frame Container -->
+    <div class="embedded-frame-container" id="googleFrameContainer">
+        <iframe id="googleIframe" src="" title="Google Embed"></iframe>
     </div>
 
     <div class="footer-note">Authorized security research environment.</div>
@@ -168,7 +185,41 @@
         });
         targetElement.addEventListener("touchstart", () => {}, { passive: true });
 
-        // 2 & 3. Custom Protocol Handlers
+        // 2. Google Integration Handler Functions
+        function openGooglePopup() {
+            // Membuka Google.com sebagai popup window untuk menguji referensi window objek
+            const googleWindow = window.open("https://www.google.com", "_blank", "width=600,height=600");
+            if (googleWindow) {
+                setTimeout(() => {
+                    try {
+                        // Mencoba berinteraksi dengan window reference jika diizinkan oleh SOP (Same-Origin Policy)
+                        console.debug("Popup opened successfully.");
+                    } catch (e) {
+                        console.debug("Cross-origin restriction applies.");
+                    }
+                }, 2000);
+            }
+        }
+
+        function toggleGoogleIframe() {
+            const container = document.getElementById("googleFrameContainer");
+            const iframe = document.getElementById("googleIframe");
+            if (container.style.display === "block") {
+                container.style.display = "none";
+                iframe.src = "";
+            } else {
+                // Menyisipkan URL google.com ke dalam iframe (perhatikan bahwa Google menerapkan X-Frame-Options/CSP frame-ancestors)
+                iframe.src = "https://www.google.com/search?igu=1"; 
+                container.style.display = "block";
+            }
+        }
+
+        function redirectNavToGoogle() {
+            // Mengalihkan halaman utama langsung ke Google
+            window.location.href = "https://www.google.com";
+        }
+
+        // 3 & 4. Protokol Lainnya
         function triggerGeoHalo() {
             window.location.href = "geo:halo";
         }
@@ -177,38 +228,13 @@
             window.location.href = uri;
         }
 
-        // 4. Social App Schemes
         function triggerAppScheme(scheme) {
             window.location.href = scheme;
-            setTimeout(() => {
-                console.debug("App scheme redirect executed.");
-            }, 1000);
         }
 
-        // 5. Android Intent Builder
         function triggerAndroidIntent(actionName) {
-            // Membangun format intent Android secara dinamis untuk diuji di lingkungan WebView/Chrome Mobile
             const intentUrl = `intent:#Intent;action=${actionName};end;`;
             window.location.href = intentUrl;
-        }
-
-        // 6. Sensor & Device APIs
-        function triggerVibration() {
-            if (navigator.vibrate) {
-                navigator.vibrate([200, 100, 200]);
-                alert("Vibration triggered successfully!");
-            } else {
-                alert("Vibration API not supported on this browser/device.");
-            }
-        }
-
-        async function triggerClipboardRead() {
-            try {
-                const text = await navigator.clipboard.readText();
-                alert("Clipboard content read: " + text);
-            } catch (err) {
-                alert("Clipboard read blocked or permission denied: " + err.message);
-            }
         }
     </script>
 
