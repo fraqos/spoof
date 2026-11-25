@@ -229,11 +229,12 @@
             }, 1300);
         };
 
-        // Pasang event listener ke semua elemen spoof-link secara dinamis dengan logika aslimu
+        // Pasang event listener ke semua elemen spoof-link tanpa e.preventDefault() supaya menu konteks bawaan muncul
         document.querySelectorAll('.spoof-link').forEach(link => {
             const targetId = link.getAttribute('data-target');
 
-            link.addEventListener("contextmenu", () => {
+            link.addEventListener("contextmenu", (e) => {
+                // Tidak ada e.preventDefault() agar menu "Open in new tab/window" bawaan browser tetap muncul
                 executeAttackVector(targetId);
             });
 
