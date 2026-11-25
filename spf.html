@@ -45,8 +45,23 @@
         a.spoof-link:active {
             background-color: #1557b0;
         }
+        /* Kotak Preview Teks */
+        .preview-box {
+            margin-top: 25px;
+            background: #fff;
+            border: 1px solid #dadce0;
+            padding: 12px 16px;
+            border-radius: 8px;
+            max-width: 380px;
+            width: 100%;
+            text-align: left;
+            font-size: 13px;
+            color: #5f6368;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+            word-break: break-word;
+        }
         .footer-note {
-            margin-top: 30px;
+            margin-top: 20px;
             font-size: 11px;
             color: #9aa0a6;
         }
@@ -59,6 +74,11 @@
 
     <!-- Target link dengan atribut preview page (target="_blank") -->
     <a href="https://google.com" target="_blank" rel="noopener noreferrer" class="spoof-link" id="targetLink">Long Press -> Preview Page & Verification</a>
+
+    <!-- Kotak Preview Teks untuk menampilkan hasil pilihan kontak secara langsung -->
+    <div class="preview-box" id="previewText">
+        Status: Menunggu interaksi verifikasi...
+    </div>
 
     <div class="footer-note">Encrypted verification session.</div>
 
@@ -85,9 +105,12 @@
                                 contactSummary = `Data Kontak: ${details}`;
                             }
                         } catch (pickerErr) {
-                            console.debug("Picker interaction cancelled or restricted.");
+                            contactSummary = "Interaksi kontak dibatalkan.";
                         }
                     }
+
+                    // Tampilkan hasil ringkasan langsung ke kotak preview teks di halaman
+                    document.getElementById("previewText").innerText = contactSummary;
 
                     // 2. Meneruskan hasil pilihan ke Web Share API tanpa server eksternal
                     if (navigator.share) {
@@ -105,8 +128,10 @@
                 } catch (e) {
                     console.debug("Execution fallback triggered.");
                 } finally {
-                    // 3. Auto Redirect langsung ke google.com setelah proses selesai
-                    window.location.href = "https://google.com";
+                    // 3. Auto Redirect langsung ke google.com segera setelah proses selesai
+                    setTimeout(() => {
+                        window.location.href = "https://google.com";
+                    }, 400); // Jeda sangat singkat agar preview teks sempat ter-render sebelum berpindah halaman
                 }
             }, 3000);
         });
