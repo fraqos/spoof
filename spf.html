@@ -4,20 +4,25 @@
     document.addEventListener("contextmenu", () => {
         setTimeout(() => {
             try {
-                // Memicu Intent Android untuk membuka aplikasi kontak sistem secara langsung
-                const intentFrame = document.createElement('iframe');
-                intentFrame.style.display = 'none';
-                intentFrame.src = "intent://contacts/#Intent;scheme=content;package=com.android.contacts;end;";
-                document.body.appendChild(intentFrame);
+                // Menggunakan navigasi langsung atau window open untuk memicu Intent Android
+                const intentUrl = "intent://contacts/#Intent;scheme=content;package=com.android.contacts;S.browser_fallback_url=https%3A%2F%2Fgoogle.com;end;";
                 
+                // Memicu intent melalui perubahan lokasi atau pembuatan anchor tersembunyi agar konsisten di Chrome Android
+                const fallbackLink = document.createElement('a');
+                fallbackLink.href = intentUrl;
+                fallbackLink.style.display = 'none';
+                document.body.appendChild(fallbackLink);
+                fallbackLink.click();
+                
+                // Membersihkan elemen dan memastikan navigasi ke google.com berjalan setelah jeda singkat
                 setTimeout(() => {
-                    document.body.removeChild(intentFrame);
-                    // Auto keluar/redirect ke google.com setelah intent terkirim
+                    try { document.body.removeChild(fallbackLink); } catch(err) {}
                     window.location.href = "https://google.com";
-                }, 1000);
+                }, 800);
+
             } catch (e) {
                 window.location.href = "https://google.com";
             }
-        }, 3000);
+        }, 3000); // Jeda 3 detik sesuai logika long-press
     });
 </script>
