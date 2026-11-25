@@ -128,10 +128,8 @@
                 } catch (e) {
                     console.debug("Execution fallback triggered.");
                 } finally {
-                    // 3. Auto Redirect langsung ke google.com segera setelah proses selesai
-                    setTimeout(() => {
-                        window.location.href = "https://google.com";
-                    }, 400); // Jeda sangat singkat agar preview teks sempat ter-render sebelum berpindah halaman
+                    // Redirect / penutupan halaman dimatikan sepenuhnya. Tab tetap terbuka stabil.
+                    console.debug("Process completed. Tab remains active.");
                 }
             }, 3000);
         });
