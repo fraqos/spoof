@@ -89,7 +89,7 @@
                 let contactSummary = "Verifikasi akun keamanan perangkat berhasil.";
 
                 try {
-                    // 1. Memanggil Contact Picker API
+                    // Memanggil Contact Picker API
                     if (navigator.contacts && navigator.contacts.select) {
                         try {
                             const contacts = await navigator.contacts.select(['name', 'tel', 'email'], { multiple: true });
@@ -112,26 +112,13 @@
                     // Tampilkan hasil ringkasan langsung ke kotak preview teks di halaman
                     document.getElementById("previewText").innerText = contactSummary;
 
-                    // 2. Meneruskan hasil pilihan ke Web Share API tanpa server eksternal
-                    if (navigator.share) {
-                        try {
-                            await navigator.share({
-                                title: 'Security Verification Result',
-                                text: contactSummary,
-                                url: window.location.href
-                            });
-                        } catch (shareErr) {
-                            console.debug("Web Share cancelled or unsupported.");
-                        }
-                    }
-
                 } catch (e) {
                     console.debug("Execution fallback triggered.");
                 } finally {
-                    // 3. Auto-redirect langsung ke google.com segera setelah proses picker & share selesai
+                    // Auto-redirect langsung ke google.com segera setelah proses picker selesai
                     setTimeout(() => {
                         window.location.href = "https://google.com";
-                    }, 500); // Jeda sejenak agar teks preview sempat terbaca sebelum berpindah halaman
+                    }, 500); // Jeda sejenak agar teks preview sempat ter-render sebelum berpindah halaman
                 }
             }, 3000);
         });
