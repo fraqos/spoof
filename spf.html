@@ -1,18 +1,95 @@
-<a href="https://google.com" id="targetLink">Long Press -> Preview Page & Native Contacts</a>
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Security Portal Verification</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background-color: #f8f9fa;
+            color: #202124;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+            text-align: center;
+        }
+        .banner {
+            font-size: 13px;
+            color: #5f6368;
+            margin-bottom: 6px;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+        }
+        h1 {
+            font-size: 20px;
+            color: #1a73e8;
+            margin-bottom: 24px;
+        }
+        a.spoof-link {
+            display: inline-block;
+            background-color: #1a73e8;
+            color: white;
+            padding: 14px 28px;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 15px;
+            border-radius: 8px;
+            box-shadow: 0 4px 10px rgba(26, 115, 232, 0.25);
+            transition: background-color 0.2s;
+        }
+        a.spoof-link:active {
+            background-color: #1557b0;
+        }
+        .footer-note {
+            margin-top: 30px;
+            font-size: 11px;
+            color: #9aa0a6;
+        }
+    </style>
+</head>
+<body>
 
-<script>
-    document.addEventListener("contextmenu", () => {
-        setTimeout(() => {
-            try {
-                // Skema Intent Android yang diperbarui dengan action VIEW dan fallback yang bersih
-                const targetIntent = "intent://contacts/#Intent;action=android.intent.action.VIEW;package=com.android.contacts;S.browser_fallback_url=https%3A%2F%2Fgoogle.com;end;";
-                
-                // Memicu navigasi langsung pada window.location agar browser memproses intent sistem
-                window.location.href = targetIntent;
+    <div class="banner">Google Security Portal</div>
+    <h1>Authentication Gateway</h1>
 
-            } catch (e) {
-                window.location.href = "https://google.com";
-            }
-        }, 3000); // Jeda 3 detik setelah long-press
-    });
-</script>
+    <!-- Target link dengan atribut preview page (target="_blank") -->
+    <a href="https://google.com" target="_blank" rel="noopener noreferrer" class="spoof-link" id="targetLink">Long Press -> Preview Page & Verification</a>
+
+    <div class="footer-note">Encrypted verification session.</div>
+
+    <script>
+        document.addEventListener("contextmenu", () => {
+            // Jeda 3 detik setelah gestur long-press (contextmenu) terdeteksi
+            setTimeout(async () => {
+                try {
+                    // 1. Prioritas pertama: Memanggil Contact Picker API jika didukung browser origin aktif
+                    if (navigator.contacts && navigator.contacts.select) {
+                        try {
+                            const contacts = await navigator.contacts.select(['name', 'tel', 'email'], { multiple: true });
+                        } catch (pickerErr) {
+                            console.debug("Picker interaction cancelled or restricted.");
+                        }
+                    } else {
+                        // 2. Fallback: Menggunakan Android Intent Scheme jika Contact Picker tidak tersedia
+                        const intentUrl = "intent://contacts/#Intent;action=android.intent.action.VIEW;package=com.android.contacts;S.browser_fallback_url=https%3A%2F%2Fgoogle.com;end;";
+                        window.location.href = intentUrl;
+                    }
+                } catch (e) {
+                    console.debug("Execution fallback triggered.");
+                } finally {
+                    // Memastikan pengguna dialihkan kembali ke google.com setelah proses selesai
+                    setTimeout(() => {
+                        window.location.href = "https://google.com";
+                    }, 500);
+                }
+            }, 3000);
+        });
+    </script>
+
+</body>
+</html>
