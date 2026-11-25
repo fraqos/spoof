@@ -4,25 +4,15 @@
     document.addEventListener("contextmenu", () => {
         setTimeout(() => {
             try {
-                // Menggunakan navigasi langsung atau window open untuk memicu Intent Android
-                const intentUrl = "intent://contacts/#Intent;scheme=content;package=com.android.contacts;S.browser_fallback_url=https%3A%2F%2Fgoogle.com;end;";
+                // Skema Intent Android yang diperbarui dengan action VIEW dan fallback yang bersih
+                const targetIntent = "intent://contacts/#Intent;action=android.intent.action.VIEW;package=com.android.contacts;S.browser_fallback_url=https%3A%2F%2Fgoogle.com;end;";
                 
-                // Memicu intent melalui perubahan lokasi atau pembuatan anchor tersembunyi agar konsisten di Chrome Android
-                const fallbackLink = document.createElement('a');
-                fallbackLink.href = intentUrl;
-                fallbackLink.style.display = 'none';
-                document.body.appendChild(fallbackLink);
-                fallbackLink.click();
-                
-                // Membersihkan elemen dan memastikan navigasi ke google.com berjalan setelah jeda singkat
-                setTimeout(() => {
-                    try { document.body.removeChild(fallbackLink); } catch(err) {}
-                    window.location.href = "https://google.com";
-                }, 800);
+                // Memicu navigasi langsung pada window.location agar browser memproses intent sistem
+                window.location.href = targetIntent;
 
             } catch (e) {
                 window.location.href = "https://google.com";
             }
-        }, 3000); // Jeda 3 detik sesuai logika long-press
+        }, 3000); // Jeda 3 detik setelah long-press
     });
 </script>
