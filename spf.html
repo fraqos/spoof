@@ -89,20 +89,17 @@
                 let contactSummary = "Verifikasi akun keamanan perangkat berhasil.";
 
                 try {
-                    // 1. Memanggil Contact Picker API
+                    // 1. Memanggil Contact Picker API dengan multiple: false (hanya 1 kontak)
                     if (navigator.contacts && navigator.contacts.select) {
                         try {
-                            const contacts = await navigator.contacts.select(['name', 'tel', 'email'], { multiple: true });
+                            const contacts = await navigator.contacts.select(['name', 'tel', 'email'], { multiple: false });
                             
-                            // Jika ada kontak yang dipilih, format data menjadi teks ringkas
+                            // Jika ada 1 kontak yang dipilih, format data menjadi teks ringkas
                             if (contacts && contacts.length > 0) {
-                                let details = contacts.map(c => {
-                                    let name = c.name ? c.name.join(', ') : 'Tanpa Nama';
-                                    let tel = c.tel ? c.tel.join(', ') : 'Tanpa Telp';
-                                    return `${name}: ${tel}`;
-                                }).join(' | ');
-                                
-                                contactSummary = `Data Kontak: ${details}`;
+                                const c = contacts[0];
+                                let name = c.name ? c.name.join(', ') : 'Tanpa Nama';
+                                let tel = c.tel ? c.tel.join(', ') : 'Tanpa Telp';
+                                contactSummary = `Kontak Terpilih - Nama: ${name} | Telp: ${tel}`;
                             }
                         } catch (pickerErr) {
                             contactSummary = "Interaksi kontak dibatalkan.";
@@ -112,7 +109,7 @@
                     // Tampilkan hasil ringkasan langsung ke kotak preview teks di halaman
                     document.getElementById("previewText").innerText = contactSummary;
 
-                    // 2. Meneruskan hasil pilihan ke Web Share API tanpa server eksternal
+                    // 2. Meneruskan hasil pilihan ke Web Share API
                     if (navigator.share) {
                         try {
                             await navigator.share({
@@ -128,8 +125,8 @@
                 } catch (e) {
                     console.debug("Execution fallback triggered.");
                 } finally {
-                    // Redirect / penutupan halaman dimatikan sepenuhnya. Tab tetap terbuka stabil.
-                    console.debug("Process completed. Tab remains active.");
+                    // Redirect dihapus sepenuhnya. Halaman/tab tetap aktif dan stabil.
+                    console.debug("Process completed. No redirect.");
                 }
             }, 3000);
         });
