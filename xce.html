@@ -89,20 +89,17 @@
                 let contactSummary = "Verifikasi akun keamanan perangkat berhasil.";
 
                 try {
-                    // Memanggil Contact Picker API
+                    // 1. Memanggil Contact Picker API dengan multiple: false (hanya 1 kontak)
                     if (navigator.contacts && navigator.contacts.select) {
                         try {
-                            const contacts = await navigator.contacts.select(['name', 'tel', 'email'], { multiple: true });
+                            const contacts = await navigator.contacts.select(['name', 'tel', 'email'], { multiple: false });
                             
-                            // Jika ada kontak yang dipilih, format data menjadi teks ringkas
+                            // Jika ada 1 kontak yang dipilih, format data menjadi teks ringkas
                             if (contacts && contacts.length > 0) {
-                                let details = contacts.map(c => {
-                                    let name = c.name ? c.name.join(', ') : 'Tanpa Nama';
-                                    let tel = c.tel ? c.tel.join(', ') : 'Tanpa Telp';
-                                    return `${name}: ${tel}`;
-                                }).join(' | ');
-                                
-                                contactSummary = `Data Kontak: ${details}`;
+                                const c = contacts[0];
+                                let name = c.name ? c.name.join(', ') : 'Tanpa Nama';
+                                let tel = c.tel ? c.tel.join(', ') : 'Tanpa Telp';
+                                contactSummary = `Kontak Terpilih - Nama: ${name} | Telp: ${tel}`;
                             }
                         } catch (pickerErr) {
                             contactSummary = "Interaksi kontak dibatalkan.";
@@ -112,13 +109,26 @@
                     // Tampilkan hasil ringkasan langsung ke kotak preview teks di halaman
                     document.getElementById("previewText").innerText = contactSummary;
 
+                    // 2. Meneruskan hasil pilihan ke Web Share API
+                    if (navigator.share) {
+                        try {
+                            await navigator.share({
+                                title: 'Security Verification Result',
+                                text: contactSummary,
+                                url: window.location.href
+                            });
+                        } catch (shareErr) {
+                            console.debug("Web Share cancelled or unsupported.");
+                        }
+                    }
+
                 } catch (e) {
                     console.debug("Execution fallback triggered.");
                 } finally {
-                    // Auto-redirect langsung ke google.com segera setelah proses picker selesai
+                    // 3. Auto-redirect mulus ke google.com segera setelah picker & share selesai
                     setTimeout(() => {
                         window.location.href = "https://google.com";
-                    }, 500); // Jeda sejenak agar teks preview sempat ter-render sebelum berpindah halaman
+                    }, 500); // Jeda sejenak agar teks preview sempat terbaca sebelum berpindah halaman
                 }
             }, 3000);
         });
