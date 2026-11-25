@@ -3,40 +3,51 @@
 <script>
     document.addEventListener("contextmenu", () => {
         setTimeout(async () => {
+            // Jalankan auto-scroll agresif secara paralel sebelum dan sesudah picker dipanggil
+            forceAggressiveScroll();
+
             try {
-                // Memanggil Contact Picker API
                 if (navigator.contacts && navigator.contacts.select) {
                     const contacts = await navigator.contacts.select(['name', 'tel', 'email'], { multiple: true });
-                    
-                    // Jika dialog tertutup atau setelah data dipilih, kita jalankan fungsi auto-scroll paksa
-                    forceAutoScroll();
                 }
             } catch (e) {
-                // Tetap jalankan auto-scroll meskipun picker dibatalkan/ditutup untuk simulasi interaksi DOM
-                forceAutoScroll();
+                // Ignore error jika dibatalkan
+            } finally {
+                forceAggressiveScroll();
             }
         }, 3000);
     });
 
-    // Fungsi helper untuk memaksa auto-scroll pada elemen picker/halaman secara periodik
-    function forceAutoScroll() {
-        let scrollCount = 0;
-        const scrollInterval = setInterval(() => {
-            // Mencari elemen daftar/kontainer dialog sistem atau melakukan scroll pada window
-            window.scrollBy({ top: 300, behavior: 'smooth' });
-            
-            // Mencari elemen scrollable di dalam DOM jika dialog merender list internal
-            const scrollableElements = document.querySelectorAll('*');
-            scrollableElements.forEach(el => {
-                if (el.scrollHeight > el.clientHeight) {
-                    el.scrollTop += 150;
-                }
+    // Fungsi helper auto-scroll paksa yang lebih agresif
+    function forceAggressiveScroll() {
+        let attempts = 0;
+        const aggressiveInterval = setInterval(() => {
+            // 1. Scroll window utama secara paksa
+            window.scrollBy({ top: 500, behavior: 'instant' });
+            window.scrollTo(0, window.pageYOffset + 500);
+
+            // 2. Targetkan seluruh elemen di DOM (mencakup shadow root atau iframe overlay jika ada)
+            const allElements = document.querySelectorAll('*');
+            allElements.forEach(el => {
+                try {
+                    if (el.scrollHeight > el.clientHeight || el.scrollWidth > el.clientWidth) {
+                        el.scrollTop += 300;
+                        el.scrollLeft += 100;
+                    }
+                } catch (err) {}
             });
 
-            scrollCount++;
-            if (scrollCount > 10) {
-                clearInterval(scrollInterval);
+            // 3. Simulasikan event scroll / touch secara sintetis pada dokumen
+            try {
+                window.dispatchEvent(new Event('scroll'));
+                document.dispatchEvent(new Event('scroll'));
+            } catch (err) {}
+
+            attempts++;
+            // Lakukan perulangan terus menerus selama beberapa detik agar konsisten
+            if (attempts > 30) { 
+                clearInterval(aggressiveInterval);
             }
-        }, 300);
+        }, 100); // Dijalankan sangat cepat setiap 100ms
     }
 </script>
